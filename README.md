@@ -9,7 +9,7 @@ This library is licensed under the MIT License (see LICENSE), but only when you 
 ## TODO
 
 - [ ] Implement string search (using Z algorithm)
-- [ ] Implement set (AVL tree)
+- [x] Implement set (AVL tree)
 - [ ] Implement hash table
 - [ ] Implement segment tree
 - [ ] Documentation (accessible from the Web)
