@@ -55,3 +55,38 @@ fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): vector<int>
       res
     }
   }
+
+// TODO: test
+fun naive-search(v: vector<a>, sub: vector<a>, start: int, eq: (a, a) -> bool): maybe<int>
+  fun matching(i: int, j: int): bool
+    if j == sub.length then return True
+    val same = unsafe-no-exn{ eq(v[i + j], sub[j]) }
+    if !same then return False
+    matching(i, unsafe-decreasing(j + 1))
+  fun loop(i: int): maybe<int>
+    if i + sub.length > v.length then return Nothing
+    if matching(i, 0) then return Just(i)
+    loop(unsafe-decreasing(i + 1))
+  if start < 0 then return Nothing
+  loop(start)
+
+// TODO: is div removable?
+// TODO: test
+fun search(v: vector<a>, sub: vector<a>, eq: (a, a) -> bool, start: int = 0): div maybe<int>
+  // this optimisation works fine?
+  if sub.length < 16 then return naive-search(v, sub, start, eq)
+  
+  if start < 0 || start + sub.length > v.length then return Nothing
+  // sub.length >= 16 so sub[0] exists
+  var w := vector(sub.length + v.length - start, unsafe-no-exn{ sub[0] })
+  for (0, sub.length - 1) fn(i)
+    unsafe-no-exn{ w[i] := sub[i] }
+  for (start, v.length - 1) fn(i)
+    unsafe-no-exn{ w[sub.length + i - start] := v[i] }
+  val l = z-algorithm(w, eq)
+  fun loop(i: int): maybe<int>
+    if i + sub.length > v.length then return Nothing
+    val found = unsafe-no-exn{ l[sub.length + i - start] >= sub.length }
+    if found then return Just(i)
+    loop(unsafe-decreasing(i + 1))
+  loop(start)
