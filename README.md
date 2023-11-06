@@ -11,6 +11,6 @@ This library is licensed under the MIT License (see LICENSE), but only when you 
 - [ ] Implement string search (using Z algorithm)
 - [x] Implement set (AVL tree)
 - [ ] Implement hash table
-- [ ] Implement segment tree
+- [x] Implement segment tree
 - [ ] Documentation (accessible from the Web)
 - [ ] Add tests
