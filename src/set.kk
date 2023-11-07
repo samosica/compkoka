@@ -30,6 +30,13 @@ fun empty(): set
 fun singleton(v: int)
   Bra( value = v, skew = E, left = Emp, right = Emp )
 
+fun mem(t: set, v: int): bool
+  match t
+    Emp -> False
+    Bra(a, _, _, _) | v == a -> True
+    Bra(a, _, l, _) | v < a -> l.mem(v)
+    Bra(_, _, _, r) -> r.mem(v)
+
 // 左の部分木が 2 だけ高くなっていたら修正する
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
 // 要素の削除の場合、「右」の部分木から削除したときであり、逆になるので注意が必要
