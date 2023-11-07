@@ -3,9 +3,9 @@ type skewness
   E
   R
 
-type avltree
+type set
   Emp
-  Bra{ value: int; skew: skewness; left: avltree; right: avltree }
+  Bra{ value: int; skew: skewness; left: set; right: set }
 
 fun show(s: skewness): string
   match s
@@ -13,18 +13,18 @@ fun show(s: skewness): string
     E -> "E"
     R -> "R"
 
-fun show(t: avltree): string
+fun show(t: set): string
   match t
     Emp -> "Emp"
     Bra(v, s, l, r) ->
       "Bra(" ++ v.show ++ ", " ++ s.show ++ ", " ++ l.show ++ ", " ++ r.show ++ ")"
 
-fun is-empty(t: avltree): bool
+fun is-empty(t: set): bool
   match t
     Emp -> True
     _ -> False
 
-fun empty(): avltree
+fun empty(): set
   Emp
 
 fun singleton(v: int)
@@ -34,7 +34,7 @@ fun singleton(v: int)
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
 // 要素の削除の場合、「右」の部分木から削除したときであり、逆になるので注意が必要
 // 2番目の戻り値が True のとき、修正前後で木の高さは変わらない
-fun adjust-l(t: avltree): (avltree, bool)
+fun adjust-l(t: set): (set, bool)
   match t
     Bra(a, E, l, r) -> (Bra(a, L, l, r), True)
     Bra(a, R, l, r) -> (Bra(a, E, l, r), False)
@@ -50,7 +50,7 @@ fun adjust-l(t: avltree): (avltree, bool)
       (Bra(c, E, Bra(b, L, l', l''), Bra(a, E, r'', r)), False)
     _ -> (t, False) // for exhaustive check
 
-fun adjust-r(t: avltree): (avltree, bool)
+fun adjust-r(t: set): (set, bool)
   match t
     Bra(a, L, l, r) -> (Bra(a, E, l, r), False)
     Bra(a, E, l, r) -> (Bra(a, R, l, r), True)
@@ -69,7 +69,7 @@ fun adjust-r(t: avltree): (avltree, bool)
 // insert-intl(t, v) = (t', grown)
 //    t' : t に v を挿入して得られる木
 // grown : 高さが 1 増えたか
-fun insert-intl(t: avltree, v: int): (avltree, bool)
+fun insert-intl(t: set, v: int): (set, bool)
   match t
     Emp -> (singleton(v), True)
     Bra(a, _, _, _) | v == a -> (t, False) // v がすでに存在するときは追加しない
@@ -84,16 +84,16 @@ fun insert-intl(t: avltree, v: int): (avltree, bool)
       if !grown then return (t', False)
       t'.adjust-r
 
-fun insert(t: avltree, v: int): avltree
+fun insert(t: set, v: int): set
   t.insert-intl(v).fst
 
-fun min(t: avltree): maybe<int>
+fun min(t: set): maybe<int>
   match t
     Emp -> Nothing
     Bra(a, _, Emp, _) -> Just(a)
     Bra(_, _, l, _) -> l.min
 
-fun max(t: avltree): maybe<int>
+fun max(t: set): maybe<int>
   match t
     Emp -> Nothing
     Bra(a, _, _, Emp) -> Just(a)
@@ -103,7 +103,7 @@ fun max(t: avltree): maybe<int>
 //          t' : t から v をなくした木
 //     deleted : v を削除したか (元からなければ false)
 //    shrinked : 高さが 1 減ったか
-fun erase-intl(t: avltree, v: int): (avltree, bool, bool)
+fun erase-intl(t: set, v: int): (set, bool, bool)
   match t
     Emp -> (Emp, False, False)
     Bra(a, s, l, r) | v < a ->
@@ -137,9 +137,9 @@ fun erase-intl(t: avltree, v: int): (avltree, bool, bool)
         _ -> ()
       (Emp, True, True)
 
-fun erase(t: avltree, v: int): avltree
+fun erase(t: set, v: int): set
   t.erase-intl(v).fst
 
-fun erase-with-status(t: avltree, v: int): (avltree, bool)
+fun erase-with-status(t: set, v: int): (set, bool)
   val (t', deleted, _) = t.erase-intl(v)
   (t', deleted)
