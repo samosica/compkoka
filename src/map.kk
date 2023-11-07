@@ -71,7 +71,8 @@ fun adjust-r(t: map<b>): (map<b>, bool)
 fun insert-intl(t: map<b>, k: int, v: b): (map<b>, bool)
   match t
     Emp -> (Bra(k, v, E, Emp, Emp), True)
-    Bra(a, _, _, _, _) | k == a -> (t, False) // k がすでに存在するときは追加しない
+    Bra(a, _, s, l, r) | k == a ->
+      (Bra(a, v, s, l, r), False) // k がすでに存在するときは値を更新する
     Bra(a, x, s, l, r) | k < a ->
       val (l', grown) = l.insert-intl(k, v)
       val t' = Bra(a, x, s, l', r)
@@ -150,16 +151,15 @@ fun get(t: map<b>, k: int): maybe<b>
     Bra(a, _, _, l, _) | k < a -> l.get(k)
     Bra(_, _, _, _, r) -> r.get(k)
 
-fun set(t: map<b>, k: int, v: b): map<b>
-  match t
-    Emp -> Emp
-    Bra(a, _, s, l, r) | k == a -> Bra(a, v, s, l, r)
-    Bra(a, x, s, l, r) | k < a -> Bra(a, x, s, l.set(k, v), r)
-    Bra(a, x, s, l, r) -> Bra(a, x, s, l, r.set(k, v))
-
 fun update(t: map<b>, k: int, f: b -> e b): e map<b>
   match t
     Emp -> Emp
     Bra(a, x, s, l, r) | k == a -> Bra(a, f(x), s, l, r)
     Bra(a, x, s, l, r) | k < a -> Bra(a, x, s, l.update(k, f), r)
     Bra(a, x, s, l, r) -> Bra(a, x, s, l, r.update(k, f))
+
+fun update-or-insert(t: map<b>, k: int, f: b -> e b, v: b): e map<b>
+  if t.get(k).is-just then
+    t.update(k, f)
+  else
+    t.insert(k, v)
