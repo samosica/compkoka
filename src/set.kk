@@ -150,3 +150,11 @@ fun erase(t: set, v: int): set
 fun erase-with-status(t: set, v: int): (set, bool)
   val (t', deleted, _) = t.erase-intl(v)
   (t', deleted)
+
+fun foreach(t: set, action: int -> e ()): e ()
+  match t
+    Emp -> ()
+    Bra(v, _, l, r) ->
+      foreach(l, action)
+      action(v)
+      foreach(r, action)
