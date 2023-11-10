@@ -2,7 +2,7 @@
 // Iteration
 
 // Iterate over integers in decreasing order.
-// If start < end, this function does nothing.
+// Do nothing if `start` < `end`.
 fun forev(start: int, end: int, action: int -> e ()): e ()
   if start >= end then
     action(start)
