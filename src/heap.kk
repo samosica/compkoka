@@ -1,8 +1,12 @@
-// Pairing heap
-// Reference:
-// - Chris Okasaki. Purely Functional Data Structures. Cambridge University Press 1999.
+/* Pairing heap
 
-// WARNING: This implementation is slow (why?)
+Reference:
+
+- Chris Okasaki. Purely Functional Data Structures. Cambridge University Press 1999.
+
+Warning: this implementation is slow
+*/
+module heap
 
 type multiway-tree<a>
   Emp
@@ -11,15 +15,20 @@ type multiway-tree<a>
 type pairing-heap<a>
   Heap{ tree: multiway-tree<a>; comp: (a, a) -> order }
 
-inline fun is-empty(h: pairing-heap<a>): bool
+// Check whether a heap is empty
+pub inline fun is-empty(h: pairing-heap<a>): bool
   match h.tree
     Emp -> True
     _ -> False
 
-inline fun empty(comp: (a, a) -> order): pairing-heap<a>
+// Create an empty heap.
+// `comp` determines the order of elements in the heap
+pub inline fun empty(comp: (a, a) -> order): pairing-heap<a>
   Heap(Emp, comp)
 
-inline fun singleton(v: a, comp: (a, a) -> order): pairing-heap<a>
+// Create a heap with a single element.
+// `comp` determines the order of elements in the heap
+pub inline fun singleton(v: a, comp: (a, a) -> order): pairing-heap<a>
   Heap(Bra(v, []), comp)
 
 fun meld(t1: multiway-tree<a>, t2: multiway-tree<a>, comp: (a, a) -> order): multiway-tree<a>
@@ -34,7 +43,9 @@ fun meld(t1: multiway-tree<a>, t2: multiway-tree<a>, comp: (a, a) -> order): mul
           else
             Bra(v2, Cons(t1, ss2))
 
-inline fun meld(h1: pairing-heap<a>, h2: pairing-heap<a>): pairing-heap<a>
+// Combine two heaps.
+// Assume they use the same ordering function
+pub inline fun meld(h1: pairing-heap<a>, h2: pairing-heap<a>): pairing-heap<a>
   Heap(meld(h1.tree, h2.tree, h1.comp), h1.comp)
 
 fun insert(t: multiway-tree<a>, v: a, comp: (a, a) -> order): multiway-tree<a>
@@ -46,10 +57,12 @@ fun insert(t: multiway-tree<a>, v: a, comp: (a, a) -> order): multiway-tree<a>
         Bra(a, Cons(Bra(v, []), ss))
     Emp -> Bra(v, [])
 
-inline fun insert(h: pairing-heap<a>, v: a): pairing-heap<a>
+// Add a value to a heap
+pub inline fun insert(h: pairing-heap<a>, v: a): pairing-heap<a>
   Heap(h.tree.insert(v, h.comp), h.comp)
 
-inline fun min(h: pairing-heap<a>): maybe<a>
+// Return the minimum element of a heap
+pub inline fun min(h: pairing-heap<a>): maybe<a>
   match h.tree
     Emp -> Nothing
     Bra(v, _) -> Just(v)
@@ -60,7 +73,9 @@ fun meld-pairs(ts: list<multiway-tree<a>>, comp: (a, a) -> order): multiway-tree
     [] -> Emp
     [t] -> t
 
-inline fun erase-min(h: pairing-heap<a>): pairing-heap<a>
+// Remove the minimum element from a heap.
+// Do nothing if the given heap is empty
+pub inline fun erase-min(h: pairing-heap<a>): pairing-heap<a>
   match h.tree
     Emp -> h
     Bra(_, ss) -> Heap(ss.meld-pairs(h.comp), h.comp)
