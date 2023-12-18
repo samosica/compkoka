@@ -1,4 +1,5 @@
 // Fenwick tree
+module fenwick
 
 import std/num/int64
 
@@ -6,10 +7,10 @@ struct fenwick<h>
   tree: ref<h,vector<int>>
 
 // Create a Fenwick tree
-fun fenwick(size: int): alloc<h> fenwick<h>
+pub fun fenwick(size: int): alloc<h> fenwick<h>
   Fenwick(ref(vector(size + 1, 0)))
 
-fun size(f: fenwick<h>): read<h> int
+pub fun size(f: fenwick<h>): read<h> int
   (!f.tree).length - 1
 
 // Find the rightmost 1 of the binary representation of `x`.
@@ -21,7 +22,7 @@ fun rightmost-one(x: int)
 // Add a value to an element.
 // The first element is at position 1 (1-based).
 // Raise an exception if `index` <= 0 or `index` > `f.size`.
-fun add(f: fenwick<h>, index: int, value: int): <exn,read<h>,write<h>> ()
+pub fun add(f: fenwick<h>, index: int, value: int): <exn,read<h>,write<h>> ()
   val s = f.size
   if index <= 0 || index > s then "out of bounds".throw
   f.tree.modify fn(t)
@@ -45,7 +46,7 @@ fun add(f: fenwick<h>, index: int, value: int): <exn,read<h>,write<h>> ()
 // The first element is at position 1 (1-based).
 // For convenience, return 0 if `end` = 0.
 // Raise an exception if `end` < 0 or `end` > `f.size`.
-fun prefix-sum(f: fenwick<h>, end: int): <exn,read<h>> int
+pub fun prefix-sum(f: fenwick<h>, end: int): <exn,read<h>> int
   if end < 0 || end > f.size then "out of bounds".throw
   var sum := 0
   var i := end
