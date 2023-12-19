@@ -1,25 +1,49 @@
+/* Input/Output
+
+A sample code of `stream`:
+
+```
+import io
+
+fun main()
+  read-stdin().stream
+    val a = sint().unjust
+    val b = sint().unjust
+    val c = sint().unjust
+    val s = sstring()
+    (a + b + c).print
+    " ".print
+    s.println
+```
+\/
+*/
+module io
+
 import std/os/path
 import std/os/file
 import std/os/readline
 
-// reasonably fast stream
-
-linear effect stream
+// *Reasonably* fast stream
+pub linear effect stream
   fun read-until(p: char -> bool): string
   fun skip-until(p: char -> bool): ()
 
-fun skip-whitespaces(): stream ()
+pub fun skip-whitespaces(): stream ()
   skip-until(is-white)
 
-fun sstring(): stream string
+// Read a string from a stream.
+// This function first skips whitespaces, and then reads characters until
+// reaching whitespace
+pub fun sstring(): stream string
   skip-whitespaces()
   read-until(fn(c) { !c.is-white })
 
-fun sint(): <div,stream> maybe<int>
+// Read an integer from a stream
+pub fun sint(): <div,stream> maybe<int>
   skip-whitespaces()
   sstring().parse-int
 
-fun stream(^s: vector<char>, action: () -> <stream,div|e> a): <div|e> a
+pub fun stream(^s: vector<char>, action: () -> <stream,div|e> a): <div|e> a
   var cursor := 0
   with handler
     fun skip-until(p)
@@ -40,19 +64,23 @@ fun stream(^s: vector<char>, action: () -> <stream,div|e> a): <div|e> a
       loop("")
   action()
 
-fun stream(^s: string, action: () -> <stream,div|e> a): <div|e> a
+pub fun stream(^s: string, action: () -> <stream,div|e> a): <div|e> a
   s.vector.stream(action)
 
-fun read-stdin(): <exn,fsys> string
+pub fun read-stdin(): <exn,fsys> string
   read-text-file(path("/dev/stdin"))
 
-fun parse-ints(s: string): exn list<int>
+// Parse integers separated by whitespaces
+pub fun parse-ints(s: string): exn list<int>
   s.split(" ").map(fn(s') { s'.parse-int.unjust })
 
-fun read-ints(): <console,exn> list<int>
+// Read integers from standard input.
+// Warning: if a line to be read contains more than 1,022 characters,
+// this function does not work properly. Use `read-stdin` and `parse-ints` instead
+pub fun read-ints(): <console,exn> list<int>
   readline().parse-ints
 
-fun println(l: list<int>, sep: string = " "): console ()
+pub fun println(l: list<int>, sep: string = " "): console ()
   var first := True
   foreach (l) fn(x)
     if first then first := False
