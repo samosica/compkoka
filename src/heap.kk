@@ -12,7 +12,7 @@ type multiway-tree<a>
   Emp
   Bra{ value: a; sub: list<multiway-tree<a>> }
 
-type pairing-heap<a>
+abstract type pairing-heap<a>
   Heap{ tree: multiway-tree<a>; comp: (a, a) -> order }
 
 // Check whether a heap is empty

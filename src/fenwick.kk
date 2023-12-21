@@ -3,7 +3,7 @@ module fenwick
 
 import std/num/int64
 
-struct fenwick<h>
+abstract struct fenwick<h>
   tree: ref<h,vector<int>>
 
 // Create a Fenwick tree
