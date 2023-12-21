@@ -1,3 +1,9 @@
+/* Map
+
+Keys are integers and values may have an arbitrary type.
+*/
+module map
+
 // TODO: write test
 
 type skewness
@@ -5,7 +11,7 @@ type skewness
   E
   R
 
-type map<b>
+abstract type map<b>
   Emp
   Bra{ key: int; value: b; skew: skewness; left: map<b>; right: map<b> }
 
@@ -15,18 +21,20 @@ fun show(s: skewness): string
     E -> "E"
     R -> "R"
 
-fun show(t: map<b>, show': b -> string): string
+pub fun show(t: map<b>, show': b -> string): string
   match t
     Emp -> "Emp"
     Bra(k, v, s, l, r) ->
       "Bra(" ++ k.show ++ ", " ++ v.show' ++ ", " ++ s.show ++ ", " ++ l.show(show') ++ ", " ++ r.show(show') ++ ")"
 
-fun is-empty(t: map<b>): bool
+// Check whether a map is empty
+pub fun is-empty(t: map<b>): bool
   match t
     Emp -> True
     _ -> False
 
-fun empty(): map<b>
+// Create an empty map.
+pub fun empty(): map<b>
   Emp
 
 // 左の部分木が 2 だけ高くなっていたら修正する
@@ -84,16 +92,20 @@ fun insert-intl(t: map<b>, k: int, v: b): (map<b>, bool)
       if !grown then return (t', False)
       t'.adjust-r
 
-fun insert(t: map<b>, k: int, v: b): map<b>
+// Add a key-value pair to a map.
+// If the given key already exists, update the corresponding value
+pub fun insert(t: map<b>, k: int, v: b): map<b>
   t.insert-intl(k, v).fst
 
-fun min-binding(t: map<b>): maybe<(int, b)>
+// Return the key-value pair of the smallest key in a map
+pub fun min-binding(t: map<b>): maybe<(int, b)>
   match t
     Emp -> Nothing
     Bra(a, x, _, Emp, _) -> Just((a, x))
     Bra(_, _, _, l, _) -> l.min-binding
 
-fun max-binding(t: map<b>): maybe<(int, b)>
+// Return the key-value pair of the largest key in a map
+pub fun max-binding(t: map<b>): maybe<(int, b)>
   match t
     Emp -> Nothing
     Bra(a, x, _, _, Emp) -> Just((a, x))
@@ -137,28 +149,33 @@ fun erase-intl(t: map<b>, k: int): (map<b>, bool, bool)
         _ -> ()
       (Emp, True, True)
 
-fun erase(t: map<b>, k: int): map<b>
+// Remove a key and the corresponding value from a map.
+// Do nothing if the given key does not exist
+pub fun erase(t: map<b>, k: int): map<b>
   t.erase-intl(k).fst
 
-fun erase-with-status(t: map<b>, k: int): (map<b>, bool)
+pub fun erase-with-status(t: map<b>, k: int): (map<b>, bool)
   val (t', deleted, _) = t.erase-intl(k)
   (t', deleted)
 
-fun get(t: map<b>, k: int): maybe<b>
+// Get the value of a specified key
+pub fun get(t: map<b>, k: int): maybe<b>
   match t
     Emp -> Nothing
     Bra(a, x, _, _, _) | k == a -> Just(x)
     Bra(a, _, _, l, _) | k < a -> l.get(k)
     Bra(_, _, _, _, r) -> r.get(k)
 
-fun update(t: map<b>, k: int, f: b -> e b): e map<b>
+// Update the value of a specified key.
+// Do nothing if the key does not exist
+pub fun update(t: map<b>, k: int, f: b -> e b): e map<b>
   match t
     Emp -> Emp
     Bra(a, x, s, l, r) | k == a -> Bra(a, f(x), s, l, r)
     Bra(a, x, s, l, r) | k < a -> Bra(a, x, s, l.update(k, f), r)
     Bra(a, x, s, l, r) -> Bra(a, x, s, l, r.update(k, f))
 
-fun update-or-insert(t: map<b>, k: int, f: b -> e b, v: b): e map<b>
+pub fun update-or-insert(t: map<b>, k: int, f: b -> e b, v: b): e map<b>
   if t.get(k).is-just then
     t.update(k, f)
   else
