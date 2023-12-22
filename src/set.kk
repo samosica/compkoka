@@ -1,9 +1,14 @@
+// Integer set
+module set
+
 type skewness
   L
   E
   R
 
-type set
+// Sets of integers.
+// Duplicates are omitted
+abstract type set
   Emp
   Bra{ value: int; skew: skewness; left: set; right: set }
 
@@ -13,24 +18,28 @@ fun show(s: skewness): string
     E -> "E"
     R -> "R"
 
-fun show(t: set): string
+pub fun show(t: set): string
   match t
     Emp -> "Emp"
     Bra(v, s, l, r) ->
       "Bra(" ++ v.show ++ ", " ++ s.show ++ ", " ++ l.show ++ ", " ++ r.show ++ ")"
 
-fun is-empty(t: set): bool
+// Check whether a set is empty
+pub fun is-empty(t: set): bool
   match t
     Emp -> True
     _ -> False
 
-fun empty(): set
+// Create an empty set
+pub fun empty(): set
   Emp
 
-fun singleton(v: int)
+// Create a set with a single element
+pub fun singleton(v: int)
   Bra( value = v, skew = E, left = Emp, right = Emp )
 
-fun mem(t: set, v: int): bool
+// Check whether a value belongs to a set
+pub fun mem(t: set, v: int): bool
   match t
     Emp -> False
     Bra(a, _, _, _) | v == a -> True
@@ -91,16 +100,20 @@ fun insert-intl(t: set, v: int): (set, bool)
       if !grown then return (t', False)
       t'.adjust-r
 
-fun insert(t: set, v: int): set
+// Add a value to a set.
+// Do nothing if the given value already exists
+pub fun insert(t: set, v: int): set
   t.insert-intl(v).fst
 
-fun min(t: set): maybe<int>
+// Return the minimum element of a set
+pub fun min(t: set): maybe<int>
   match t
     Emp -> Nothing
     Bra(a, _, Emp, _) -> Just(a)
     Bra(_, _, l, _) -> l.min
 
-fun max(t: set): maybe<int>
+// Return the maximum element of a set
+pub fun max(t: set): maybe<int>
   match t
     Emp -> Nothing
     Bra(a, _, _, Emp) -> Just(a)
@@ -144,14 +157,17 @@ fun erase-intl(t: set, v: int): (set, bool, bool)
         _ -> ()
       (Emp, True, True)
 
-fun erase(t: set, v: int): set
+// Remove an element from a set.
+// Do nothing if the given value does not exist
+pub fun erase(t: set, v: int): set
   t.erase-intl(v).fst
 
-fun erase-with-status(t: set, v: int): (set, bool)
+pub fun erase-with-status(t: set, v: int): (set, bool)
   val (t', deleted, _) = t.erase-intl(v)
   (t', deleted)
 
-fun foreach(t: set, action: int -> e ()): e ()
+// Iterate over elements in ascending order
+pub fun foreach(t: set, action: int -> e ()): e ()
   match t
     Emp -> ()
     Bra(v, _, l, r) ->
