@@ -1,6 +1,10 @@
+// Extra functions on vectors
+module vector
+
 import std/num/random
 
-fun quicksort(v: vector<a>, comp: (a, a) -> order): <pure,ndet> vector<a>
+// Quicksort
+pub fun quicksort(v: vector<a>, comp: (a, a) -> order): <pure,ndet> vector<a>
     var sorted := v
     fun swap(i: int, j: int)
         val tmp = sorted[i]
@@ -26,7 +30,9 @@ fun quicksort(v: vector<a>, comp: (a, a) -> order): <pure,ndet> vector<a>
     sort-intl(0, v.length)
     sorted
 
-fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): vector<int>
+// Return a vector whose `k`-th (0-based) element is the length of the longest
+// common prefix of `v` and the suffix starting with `v[k]`.
+pub fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): vector<int>
   val size = v.length
   if size == 0 then return vector(0, 0)
 
@@ -70,9 +76,12 @@ fun naive-search(v: vector<a>, sub: vector<a>, start: int, eq: (a, a) -> bool): 
   if start < 0 then return Nothing
   loop(start)
 
-// TODO: is div removable?
-// TODO: test
-fun search(v: vector<a>, sub: vector<a>, eq: (a, a) -> bool, start: int = 0): div maybe<int>
+// Return the position of the first occurrence of `sub` in `v`.
+// The first element is at position 0 (0-based).
+// `start` specifies the starting position to search.
+pub fun search(v: vector<a>, sub: vector<a>, eq: (a, a) -> bool, start: int = 0): div maybe<int>
+  // TODO: is div removable?
+  // TODO: test
   // this optimisation works fine?
   if sub.length < 16 then return naive-search(v, sub, start, eq)
   
