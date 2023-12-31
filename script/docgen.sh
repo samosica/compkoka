@@ -35,7 +35,7 @@ compile(){
 
     local -r DOCDIR="$CURDIR/../docs"
     mkdir -p "$DOCDIR"
-    find "$TMPDIR" -type f -name "*.html" -not -path "*.xmp.html" -print0 \
+    find "$TMPDIR" -type f -name "*.html" -not \( -name "*.xmp.html" -o -name "std_*" \) -print0 \
     | sort -z \
     | xargs -0 -I {} -n1 cp {} "$DOCDIR"
 }
