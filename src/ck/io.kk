@@ -3,7 +3,7 @@
 A sample code of `stream`:
 
 ```
-import io
+import ck/io
 
 fun main()
   read-stdin().stream
@@ -17,7 +17,7 @@ fun main()
 ```
 \/
 */
-module io
+module ck/io
 
 import std/os/path
 import std/os/file

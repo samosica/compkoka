@@ -1,5 +1,5 @@
 // Iteration
-module iter
+module ck/iter
 
 // Iterate over integers in decreasing order.
 // Do nothing if `start` < `end`.

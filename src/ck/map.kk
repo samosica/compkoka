@@ -2,7 +2,7 @@
 
 Keys are integers and values may have an arbitrary type.
 */
-module map
+module ck/map
 
 // TODO: write test
 

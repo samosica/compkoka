@@ -3,7 +3,7 @@
 Usage:
 
 ```
-import segtree
+import ck/segtree
 
 // 1. Define a monoid
 fun mon(): monoid<int>
@@ -20,7 +20,7 @@ fun main()
 ```
 \/
 */
-module segtree
+module ck/segtree
 
 pub struct monoid<a>
   one : a

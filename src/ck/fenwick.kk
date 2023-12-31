@@ -1,5 +1,5 @@
 // Fenwick tree
-module fenwick
+module ck/fenwick
 
 import std/num/int64
 

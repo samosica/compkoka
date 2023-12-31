@@ -1,5 +1,5 @@
 // Extra functions on vectors
-module vector
+module ck/vector
 
 import std/num/random
 

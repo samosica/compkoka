@@ -1,5 +1,5 @@
 // Integer set
-module set
+module ck/set
 
 type skewness
   L

@@ -1,5 +1,5 @@
 // Binary search
-module binsearch
+module ck/binsearch
 
 // Binary search on the interval of integers between `ok` and `ng`.
 // If `ng` < `ok`, the result is the smallest integer satisfying `p`.

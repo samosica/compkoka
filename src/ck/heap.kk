@@ -6,7 +6,7 @@ Reference:
 
 Warning: this implementation is slow
 */
-module heap
+module ck/heap
 
 type multiway-tree<a>
   Emp
