@@ -37,7 +37,7 @@ compile(){
     mkdir -p "$DOCDIR"
     find "$TMPDIR" -type f -name "*.html" -not -path "*.xmp.html" -print0 \
     | sort -z \
-    | xargs -0 -I {} -n1 cp {} "$DOCDIR/../docs"
+    | xargs -0 -I {} -n1 cp {} "$DOCDIR"
 }
 
 compile
