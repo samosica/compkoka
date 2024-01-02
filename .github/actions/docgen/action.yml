@@ -2,5 +2,5 @@ name: Generate documentation
 description: Generate documentation
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: '../../../Dockerfile'
   entrypoint: './script/docgen.sh'
