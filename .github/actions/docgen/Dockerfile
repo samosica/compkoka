@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM ubuntu:jammy-20231211.1@sha256:bbf3d1baa208b7649d1d0264ef7d522e1dc0deeeaaf6085bf8e4618867f03494
-ENV KOKAVER=v2.4.2
+ARG KOKAVER
+ENV KOKAVER ${KOKAVER:-v2.4.2}
 
 RUN apt-get update \
     && apt-get install -y curl npm \
