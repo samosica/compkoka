@@ -15,17 +15,17 @@ abstract type map<b>
   Emp
   Bra{ key: int; value: b; skew: skewness; left: map<b>; right: map<b> }
 
-fun show(s: skewness): string
+fun skewness/show(s: skewness): string
   match s
     L -> "L"
     E -> "E"
     R -> "R"
 
-pub fun show(t: map<b>, show': b -> string): string
+pub fun map/show(t: map<b>, ?show: b -> string): string
   match t
     Emp -> "Emp"
     Bra(k, v, s, l, r) ->
-      "Bra(" ++ k.show ++ ", " ++ v.show' ++ ", " ++ s.show ++ ", " ++ l.show(show') ++ ", " ++ r.show(show') ++ ")"
+      "Bra(" ++ k.show ++ ", " ++ v.show ++ ", " ++ s.show ++ ", " ++ l.show ++ ", " ++ r.show ++ ")"
 
 // Check whether a map is empty
 pub fun is-empty(t: map<b>): bool
