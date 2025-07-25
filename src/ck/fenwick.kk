@@ -2,6 +2,8 @@
 module ck/fenwick
 
 import std/num/int64
+import std/core/undiv
+import std/core/unsafe
 
 abstract struct fenwick<h>
   tree: ref<h,vector<int>>
@@ -28,15 +30,15 @@ pub fun add(f: fenwick<h>, index: int, value: int): <exn,read<h>,write<h>> ()
   f.tree.modify fn(t)
     // body, body2 をインライン展開すると segmentation fault が発生する (?)
     // また、local<_> を _ に変えると型推論が失敗する (?)
-    fun body(): local<_> ()
+    fun body(): <local<_>,exn> ()
       var i := index
-      unsafe-no-div{
+      pretend-no-div{
         fun body2(): _ ()
           // s の代わりに f.size を使うと型に read<_> が2回現れてしまう
           while { i <= s }
             val i' = i
             // mask<local> と unsafe-no-exn の順序は入れ替えてはいけない
-            mask<local>{ unsafe-no-exn{ t[i'] := t[i'] + value }}
+            mask<local>{ t[i'] := t[i'] + value }
             i := i + i.rightmost-one
         body2()
       }
@@ -50,7 +52,7 @@ pub fun prefix-sum(f: fenwick<h>, end: int): <exn,read<h>> int
   if end < 0 || end > f.size then "out of bounds".throw
   var sum := 0
   var i := end
-  unsafe-no-div {
+  pretend-no-div {
     while { i > 0 }
       sum := sum + (!f.tree)[i]
       i := i - i.rightmost-one
