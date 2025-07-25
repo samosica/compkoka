@@ -22,6 +22,8 @@ fun main()
 */
 module ck/segtree
 
+import std/core/undiv
+
 pub struct monoid<a>
   one : a
   mul : (a, a) -> a
@@ -34,7 +36,7 @@ abstract struct segtree<h,a>
 // Create a segment tree
 pub fun segtree(n: int, mon: monoid<a>): alloc<h> segtree<h,a>
   var leaf-count := 1
-  unsafe-no-div {
+  pretend-no-div {
     while { leaf-count < n } { leaf-count := leaf-count * 2 }
   }
   Segtree(
@@ -45,7 +47,7 @@ pub fun segtree(n: int, mon: monoid<a>): alloc<h> segtree<h,a>
 
 // Get the `k`-th element.
 // The first element is at position 0 (0-based).
-pub fun [](^seg: segtree<h,a>, ^k: int): <read<h>,div,exn> a
+pub fun @index(^seg: segtree<h,a>, ^k: int): <read<h>,div,exn> a
   (!seg.prod)[k + seg.leaf-count]
 
 // TODO: is div removable?
@@ -55,7 +57,7 @@ inline fun recalc(seg: segtree<h,a>, k: int): <read<h>,write<h>,div,exn> ()
       if i <= 1 then return ()
       val p = i / 2
       prod[p] := (seg.mon.mul)(prod[p * 2], prod[p * 2 + 1])
-      loop(unsafe-decreasing(p))
+      loop(pretend-decreasing(p))
     loop(k)
 
 // Set a value to an element.
