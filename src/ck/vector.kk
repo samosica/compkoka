@@ -1,6 +1,8 @@
 // Extra functions on vectors
 module ck/vector
 
+import std/core/undiv
+import std/num/int32
 import std/num/random
 
 // Quicksort
@@ -15,9 +17,9 @@ pub fun quicksort(v: vector<a>, comp: (a, a) -> order): <pure,ndet> vector<a>
             i
         elif p(sorted[l]) then
             swap(i, l)
-            partition(unsafe-decreasing(l + 1), r, i + 1, p)
+            partition((l + 1).pretend-decreasing, r, i + 1, p)
         else
-            partition(unsafe-decreasing(l + 1), r, i, p)
+            partition((l + 1).pretend-decreasing, r, i, p)
     fun sort-intl(l: int, r: int)
         if r - l <= 1 then return ()
         val pivot-i = srandom-int32-range(l.int32, r.int32).int
@@ -32,70 +34,73 @@ pub fun quicksort(v: vector<a>, comp: (a, a) -> order): <pure,ndet> vector<a>
 
 // Return a vector whose `k`-th (0-based) element is the length of the longest
 // common prefix of `v` and the suffix starting with `v[k]`.
-pub fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): vector<int>
+pub fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): exn vector<int>
   val size = v.length
   if size == 0 then return vector(0, 0)
 
-  unsafe-no-div {
-    unsafe-no-exn {
-      var res := vector(size, 0)
-      res[0] := size
+  pretend-no-div {
+    var res := vector(size, 0)
+    res[0] := size
 
-      var i := 1
-      var j := 0
-      var k := 0
-      while { i < size }
-        while { i + j < size && eq(v[j], v[i + j]) }
-          j := j + 1
-        res[i] := j
-        if j == 0 then
-          i := i + 1
-          return ()
-        k := 1
-        while { i + k < size && k + res[k] < j }
-          res[i + k] := res[k]
-          k := k + 1
-        i := i + k
-        j := j - k
+    var i := 1
+    var j := 0
+    var k := 0
+    while { i < size }
+      while { i + j < size && eq(v[j], v[i + j]) }
+        j := j + 1
+      res[i] := j
+      if j == 0 then
+        i := i + 1
+        return ()
+      k := 1
+      while { i + k < size && k + res[k] < j }
+        res[i + k] := res[k]
+        k := k + 1
+      i := i + k
+      j := j - k
 
-      res
-    }
+    res
   }
 
 // TODO: test
-fun naive-search(v: vector<a>, sub: vector<a>, start: int, eq: (a, a) -> bool): maybe<int>
-  fun matching(i: int, j: int): bool
+fun naive-search(v: vector<a>, sub: vector<a>, start: int, eq: (a, a) -> bool): exn maybe<int>
+  fun matching(i: int, j: int): exn bool
     if j == sub.length then return True
-    val same = unsafe-no-exn{ eq(v[i + j], sub[j]) }
+    val same = eq(v[i + j], sub[j])
     if !same then return False
-    matching(i, unsafe-decreasing(j + 1))
-  fun loop(i: int): maybe<int>
+    matching(i, (j + 1).pretend-decreasing)
+  fun loop(i: int): exn maybe<int>
     if i + sub.length > v.length then return Nothing
     if matching(i, 0) then return Just(i)
-    loop(unsafe-decreasing(i + 1))
+    loop((i + 1).pretend-decreasing)
   if start < 0 then return Nothing
   loop(start)
 
 // Return the position of the first occurrence of `sub` in `v`.
 // The first element is at position 0 (0-based).
 // `start` specifies the starting position to search.
-pub fun search(v: vector<a>, sub: vector<a>, eq: (a, a) -> bool, start: int = 0): div maybe<int>
+pub fun search(v: vector<a>, sub: vector<a>, eq: (a, a) -> bool, start: int = 0): <div,exn> maybe<int>
   // TODO: is div removable?
   // TODO: test
   // this optimisation works fine?
   if sub.length < 16 then return naive-search(v, sub, start, eq)
-  
+
   if start < 0 || start + sub.length > v.length then return Nothing
-  // sub.length >= 16 so sub[0] exists
-  var w := vector(sub.length + v.length - start, unsafe-no-exn{ sub[0] })
-  for (0, sub.length - 1) fn(i)
-    unsafe-no-exn{ w[i] := sub[i] }
-  for (start, v.length - 1) fn(i)
-    unsafe-no-exn{ w[sub.length + i - start] := v[i] }
+  // Note: inline expansion of `create-w` causes an error like
+  // `error: ‘iev_xxxx’ undeclared`.
+  fun create-w()
+    // sub.length >= 16 so sub[0] exists
+    var w := vector(sub.length + v.length - start, sub[0])
+    for (0, sub.length - 1) fn(i)
+      w[i] := sub[i]
+    for (start, v.length - 1) fn(i)
+      w[sub.length + i - start] := v[i]
+    w
+  val w = create-w()
   val l = z-algorithm(w, eq)
-  fun loop(i: int): maybe<int>
+  fun loop(i: int): exn maybe<int>
     if i + sub.length > v.length then return Nothing
-    val found = unsafe-no-exn{ l[sub.length + i - start] >= sub.length }
+    val found = l[sub.length + i - start] >= sub.length
     if found then return Just(i)
-    loop(unsafe-decreasing(i + 1))
+    loop((i + 1).pretend-decreasing)
   loop(start)
