@@ -4,7 +4,7 @@ import base
 import ck/fenwick
 
 pub fun main()
-  test("fenwick")
+  test("prefix-sum and add")
     val f = fenwick(10)
     for(1, 10) fn(i)
       expect(f.prefix-sum(i), 0)

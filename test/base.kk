@@ -45,8 +45,13 @@ pub fun expect(
 ): <testing,console> ()
   expect-intl((actual, expected), kk-file-line, (==), show)
 
-pub fun test(description: string, action: () -> <testing,exn,fsys|e> ()): <exn,fsys|e> ()
-  ("Testing " ++ description ++ ": ").eprint
+pub fun test(
+  description: string,
+  action: () -> <testing,exn,fsys|e> (),
+  // Note: `@implict/kk-module` is replaced with the name of the module that calls `test`.
+  @implicit/kk-module: string
+): <exn,fsys|e> ()
+  ("Testing " ++ description ++ " (in " ++ kk-module ++ "): ").eprint
   with handler
     return(_) green { "SUCCEEDED".eprintln }
     ctl expect-intl(actual-expected, file-line, (==), show)
