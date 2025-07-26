@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Create .koka-version
+        run: echo "v2.4.0" >> .koka-version
       - name: Generate documentation
         uses: ./.github/actions/docgen
       - name: Commit changes
