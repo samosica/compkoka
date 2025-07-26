@@ -1,0 +1,15 @@
+# Note: in order to reduce the build time of a Docker image,
+#       this workflow combines compilation test and unit tests.
+name: Test
+description: Compilation test and unit tests
+inputs:
+  compile-options:
+    description: 'Compiler options'
+    required: false
+    default: ''
+runs:
+  using: 'docker'
+  image: '../../../Dockerfile'
+  entrypoint: './script/test-all.sh'
+  env:
+    KOKA_COMPILE_OPTIONS: ${{ inputs.compile-options }}

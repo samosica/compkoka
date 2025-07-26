@@ -31,27 +31,31 @@ pub effect testing
   // Note: we combine `actual` and `expected` into a single parameter so that we reduce
   // the number of parameters. The current implementation of the compiler does not allow
   // operations to take more than four parameter.
-  ctl expect-intl(actual-expected: (a, a), file-line: string, (==): (a, a) -> bool, show: a -> string): ()
+  // Note: previous versions of the Koka compiler do not accept operators as parameters
+  // of operations, hence we use `eq` instead of `(==)`.
+  ctl expect-intl(actual-expected: (a, a), file-line: string, eq: (a, a) -> bool, show: a -> string): ()
 
 pub fun expect(
   actual: a,
   expected: a,
   ?(==): (a, a) -> bool,
   ?show: a -> string,
-  // Note: `@implicit/kk-file-line` is replaced with the location where `expect` is called,
-  // for instance, `main.kk(32)`, in compilation time. This behavior of the compiler is used
-  // in std/core/debug, but it is undocumented.
-  @implicit/kk-file-line: string
+  // Note: `?kk-file-line` is replaced with the location where `expect` is called,
+  // for instance, `main.kk(32)`, in compilation time. This behavior of the compiler
+  // is used in std/core/debug, but it is undocumented.
+  // Note: previous versions of the Koka compiler do not accept `@implicit/*`.
+  ?kk-file-line: string
 ): <testing,console> ()
   expect-intl((actual, expected), kk-file-line, (==), show)
 
 pub fun test(
   description: string,
   action: () -> <testing,exn,fsys|e> (),
-  // Note: `@implict/kk-module` is replaced with the name of the module that calls `test`.
-  @implicit/kk-module: string
+  // Note: `?m/kk-module` is replaced with the name of the module that calls `test`.
+  // `m/` is required to avoid a conflict with `debug/file/kk-module`.
+  ?m/kk-module: string
 ): <exn,fsys|e> ()
-  ("Testing " ++ description ++ " (in " ++ kk-module ++ "): ").eprint
+  ("Testing " ++ description ++ " (in " ++ m/kk-module ++ "): ").eprint
   with handler
     return(_) green { "SUCCEEDED".eprintln }
     ctl expect-intl(actual-expected, file-line, (==), show)

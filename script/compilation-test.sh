@@ -9,7 +9,7 @@ KOKA_COMPILE_OPTIONS=${KOKA_COMPILE_OPTIONS-}
 usage(){
     cat <<EOF
 Usage: $0
-Test library
+Compilation test
 
 Options:
     -h, --help          help
@@ -29,9 +29,7 @@ read_args(){
 }
 
 read_args "$@"
-cd "$CURDIR/../test"
+cd "$CURDIR/../src"
 # shellcheck disable=SC2086
-koka --no-debug -i../src -o all.exe -v0 $KOKA_COMPILE_OPTIONS all.kk
-chmod +x all.exe
-./all.exe
-rm all.exe
+koka --library --no-debug -v0 $KOKA_COMPILE_OPTIONS ck/*.kk toc.kk
+rm -r .koka
