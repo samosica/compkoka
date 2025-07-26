@@ -19,6 +19,7 @@ jobs:
     strategy:
       matrix:
         version: ['v3.0.4', 'v3.1.3', 'v3.2.2']
+        compile-options: ['', '-O2']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,3 +29,5 @@ jobs:
           KOKA_VERSION: ${{ matrix.version }}
       - name: Test
         uses: ./.github/actions/test
+        with:
+          compile-options: ${{ matrix.compile-options }}

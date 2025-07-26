@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# TODO: コンパイラのバージョンとオプションを指定できるようにする
 
 CURDIR=$(cd "$(dirname "$0")" && pwd)
 readonly CURDIR
+
+KOKA_COMPILE_OPTIONS=${KOKA_COMPILE_OPTIONS-}
 
 usage(){
     cat <<EOF
@@ -12,6 +13,9 @@ Compilation test
 
 Options:
     -h, --help          help
+
+Environment variables:
+    KOKA_COMPILE_OPTIONS    specify compile options (default: none)
 EOF
 }
 
@@ -26,5 +30,6 @@ read_args(){
 
 read_args "$@"
 cd "$CURDIR/../src"
-koka --library -v0 ck/*.kk toc.kk
+# shellcheck disable=SC2086
+koka --library --no-debug -v0 $KOKA_COMPILE_OPTIONS ck/*.kk toc.kk
 rm -r .koka
