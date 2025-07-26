@@ -12,5 +12,5 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
 
 RUN npm install -g madoko
 
-RUN --mount=type=bind,source=script/install-koka.sh,target=/install-koka.sh \
-    /install-koka.sh "$KOKA_VERSION"
+RUN --mount=type=bind,source=.,target=/compkoka \
+    /compkoka/script/install-koka.sh

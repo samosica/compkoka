@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-KOKA_VERSION=$1
+if [ -e /compkoka/.koka-version ]; then
+    KOKA_VERSION=$(cat /compkoka/.koka-version)
+fi
 
 if [ "$KOKA_VERSION" = latest ]; then
     KOKA_INSTALLER_URL="https://github.com/koka-lang/koka/releases/latest/download/install.sh"
