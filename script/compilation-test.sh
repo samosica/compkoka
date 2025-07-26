@@ -26,5 +26,5 @@ read_args(){
 
 read_args "$@"
 cd "$CURDIR/../src"
-koka --library ck/*.kk toc.kk
+koka --library -v0 ck/*.kk toc.kk
 rm -r .koka
