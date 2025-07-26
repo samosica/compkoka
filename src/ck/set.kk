@@ -12,13 +12,13 @@ abstract type set
   Emp
   Bra{ value: int; skew: skewness; left: set; right: set }
 
-fun show(s: skewness): string
+fun skewness/show(s: skewness): string
   match s
     L -> "L"
     E -> "E"
     R -> "R"
 
-pub fun show(t: set): string
+pub fun set/show(t: set): string
   match t
     Emp -> "Emp"
     Bra(v, s, l, r) ->

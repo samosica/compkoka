@@ -43,7 +43,7 @@ pub fun sint(): <div,stream> maybe<int>
   skip-whitespaces()
   sstring().parse-int
 
-pub fun stream(^s: vector<char>, action: () -> <stream,div|e> a): <div|e> a
+pub fun vector/stream(^s: vector<char>, action: () -> <stream,div|e> a): <div|e> a
   var cursor := 0
   with handler
     fun skip-until(p)
@@ -64,7 +64,7 @@ pub fun stream(^s: vector<char>, action: () -> <stream,div|e> a): <div|e> a
       loop("")
   action()
 
-pub fun stream(^s: string, action: () -> <stream,div|e> a): <div|e> a
+pub fun string/stream(^s: string, action: () -> <stream,div|e> a): <div|e> a
   s.vector.stream(action)
 
 pub fun read-stdin(): <exn,fsys> string

@@ -31,7 +31,7 @@ pub inline fun empty(comp: (a, a) -> order): pairing-heap<a>
 pub inline fun singleton(v: a, comp: (a, a) -> order): pairing-heap<a>
   Heap(Bra(v, []), comp)
 
-fun meld(t1: multiway-tree<a>, t2: multiway-tree<a>, comp: (a, a) -> order): multiway-tree<a>
+fun multiway-tree/meld(t1: multiway-tree<a>, t2: multiway-tree<a>, comp: (a, a) -> order): multiway-tree<a>
   match t1
     Emp -> t2
     Bra(v1, ss1) ->
@@ -48,7 +48,7 @@ fun meld(t1: multiway-tree<a>, t2: multiway-tree<a>, comp: (a, a) -> order): mul
 pub inline fun meld(h1: pairing-heap<a>, h2: pairing-heap<a>): pairing-heap<a>
   Heap(meld(h1.tree, h2.tree, h1.comp), h1.comp)
 
-fun insert(t: multiway-tree<a>, v: a, comp: (a, a) -> order): multiway-tree<a>
+fun multiway-tree/insert(t: multiway-tree<a>, v: a, comp: (a, a) -> order): multiway-tree<a>
   match t
     Bra(a, ss) ->
       if comp(v, a).is-lt then
