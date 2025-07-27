@@ -28,10 +28,22 @@ read_args(){
     done
 }
 
+run_test(){
+    cd "$CURDIR/../test"
+    # shellcheck disable=SC2086
+    koka --no-debug -i../src -o all.exe -v0 $KOKA_COMPILE_OPTIONS all.kk
+    chmod +x all.exe
+    ./all.exe
+    rm all.exe
+}
+
 read_args "$@"
-cd "$CURDIR/../test"
-# shellcheck disable=SC2086
-koka --no-debug -i../src -o all.exe -v0 $KOKA_COMPILE_OPTIONS all.kk
-chmod +x all.exe
-./all.exe
-rm all.exe
+
+if [ -n "${GITHUB_ACTION-}" ]; then
+    echo "::group::Run unit tests (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    run_test
+    echo '::endgroup::'
+else
+    echo "Run unit tests (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    run_test
+fi
