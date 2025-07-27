@@ -28,8 +28,20 @@ read_args(){
     done
 }
 
+run_test(){
+    cd "$CURDIR/../src"
+    # shellcheck disable=SC2086
+    koka --library --no-debug -v0 $KOKA_COMPILE_OPTIONS ck/*.kk toc.kk
+    rm -r .koka
+}
+
 read_args "$@"
-cd "$CURDIR/../src"
-# shellcheck disable=SC2086
-koka --library --no-debug -v0 $KOKA_COMPILE_OPTIONS ck/*.kk toc.kk
-rm -r .koka
+
+if [ -n "${GITHUB_ACTION-}" ]; then
+    echo "::group::Run compilation test (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    run_test
+    echo '::endgroup::'
+else
+    echo "Run compilation test (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    run_test
+fi
