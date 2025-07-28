@@ -43,11 +43,13 @@ jobs:
       - name: Release documentation
         run: |
           cd gh-pages/
+          mkdir -p docs/
+          cd docs/
 
           if [ -d "$LIBRARY_VERSION" ]; then
             rm -r "$LIBRARY_VERSION"
           fi
-          cp -r ../docs/dev "$LIBRARY_VERSION"
+          cp -r ../../docs/dev "$LIBRARY_VERSION"
 
           git add -N .
           # See <https://git-scm.com/docs/git-config#Documentation/git-config.txt-corefileMode>
