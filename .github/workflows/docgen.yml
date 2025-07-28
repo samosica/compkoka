@@ -11,6 +11,8 @@ on:
   workflow_dispatch:
 jobs:
   docgen:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     env:
       LIBRARY_VERSION: 'dev'
