@@ -6,8 +6,8 @@ on:
       - main
     paths:
       - "src/**/*.kk"
-  # release:
-  #   types: [released]
+  release:
+    types: [released]
   workflow_dispatch:
 jobs:
   docgen:
@@ -15,7 +15,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     env:
-      LIBRARY_VERSION: 'dev'
+      LIBRARY_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || 'dev' }}
       KOKA_VERSION: 'v3.2.2'
     steps:
       - name: Checkout code
