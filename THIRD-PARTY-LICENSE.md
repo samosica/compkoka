@@ -4,7 +4,7 @@ compkoka uses the following third-party softwares:
 
 ## koka-lang/koka
 
-- [Link](https://github.com/koka-lang/koka/tree/master)
+- [Link](https://github.com/koka-lang/koka/tree/dev)
 - `docs/koka.css` in compkoka is retrieved from this software.
 
 ```text
