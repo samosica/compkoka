@@ -33,7 +33,7 @@ jobs:
         run: |
           cd gh-pages/
           if [ -d "$LIBRARY_VERSION" ]; then
-            git rm "$LIBRARY_VERSION"
+            git rm -r "$LIBRARY_VERSION"
           fi
           mkdir "$LIBRARY_VERSION"
           cp ../docs/* "$LIBRARY_VERSION"
