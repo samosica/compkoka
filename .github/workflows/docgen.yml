@@ -6,26 +6,42 @@ on:
       - main
     paths:
       - "src/**/*.kk"
+  # release:
+  #   types: [released]
   workflow_dispatch:
 jobs:
   docgen:
     runs-on: ubuntu-latest
+    env:
+      LIBRARY_VERSION: 'dev'
+      KOKA_VERSION: 'v3.2.2'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Create .koka-version
-        run: echo "v2.4.0" >> .koka-version
+        run: echo "$KOKA_VERSION" >> .koka-version
       - name: Generate documentation
         uses: ./.github/actions/docgen
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'gh-pages'
+          path: 'gh-pages'
       - name: Commit changes
         run: |
+          cd gh-pages/
+          if [ -d "$LIBRARY_VERSION" ]; then
+            git rm "$LIBRARY_VERSION"
+          fi
+          mkdir "$LIBRARY_VERSION"
+          cp ../docs/* "$LIBRARY_VERSION"
           git add -N .
+          # See <https://git-scm.com/docs/git-config#Documentation/git-config.txt-corefileMode>
           git config core.filemode false
           if ! git diff --quiet; then
-            git pull
             git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git config --global user.name "github-actions[bot]"
             git add .
-            git commit -m "Update documentation"
+            git commit -m "Update documentation ($LIBRARY_VERSION)"
             git push
           fi
