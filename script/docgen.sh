@@ -28,7 +28,7 @@ compile(){
 
     local -r SRCDIR="$CURDIR/../src"
     cd "$SRCDIR"
-    koka --library --html --htmlcss koka.css --outputdir "$TMPDIR" -v0 ck/*.kk toc.kk
+    koka --library --html --htmlcss koka.css --outputdir "$TMPDIR" ck/*.kk toc.kk
 
     cd "$TMPDIR"
     madoko --verbose --odir=. ./*.xmp.html
