@@ -18,6 +18,8 @@ jobs:
       LIBRARY_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || 'dev' }}
       KOKA_VERSION: 'v3.2.2'
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Check if release is latest
         id: latest-check
         run: |
@@ -31,8 +33,6 @@ jobs:
           echo "is_latest=${is_latest}" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Create .koka-version
         run: echo "$KOKA_VERSION" >> .koka-version
       - name: Generate documentation
