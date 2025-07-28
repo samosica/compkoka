@@ -28,10 +28,10 @@ jobs:
           git config --global user.name "github-actions[bot]"
       - name: Commit changes
         run: |
-          git add -N .
+          git add -N docs
           git config core.filemode false
           if ! git diff --quiet; then
-            git add .
+            git add docs
             git commit -m "Update documentation"
             git push
           fi
