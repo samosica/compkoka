@@ -22,11 +22,6 @@ jobs:
         run: echo "$KOKA_VERSION" >> .koka-version
       - name: Generate documentation
         uses: ./.github/actions/docgen
-      - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
-        with:
-          ref: 'gh-pages'
-          path: 'gh-pages'
       - name: Setup Git
         run: |
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -40,6 +35,11 @@ jobs:
             git commit -m "Update documentation"
             git push
           fi
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'gh-pages'
+          path: 'gh-pages'
       - name: Release documentation
         run: |
           cd gh-pages/
