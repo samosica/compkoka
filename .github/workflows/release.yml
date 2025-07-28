@@ -1,27 +1,29 @@
-name: Generate documentation
+name: Release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "src/**/*.kk"
-  workflow_dispatch:
+  release:
+    types: [released]
+
 jobs:
-  docgen:
+  release-doc:
     permissions:
       contents: write
     runs-on: ubuntu-latest
     env:
-      LIBRARY_VERSION: 'dev'
-      KOKA_VERSION: 'v3.2.2'
+      LIBRARY_VERSION: github.event.release.tag_name
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Create .koka-version
-        run: echo "$KOKA_VERSION" >> .koka-version
-      - name: Generate documentation
-        uses: ./.github/actions/docgen
+      - name: Check if release is latest
+        id: latest-check
+        run: |
+          is_latest=$(
+            gh release list --json tagName,isLatest | \
+            jq --raw-output --arg version "$LIBRARY_VERSION" '.[] | select(.tagName == $version) | .isLatest'
+          )
+          echo "is_latest=${is_latest}" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
         with:
@@ -31,16 +33,9 @@ jobs:
         run: |
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-      - name: Commit changes
-        run: |
-          git add -N .
-          git config core.filemode false
-          if ! git diff --quiet; then
-            git add .
-            git commit -m "Update documentation"
-            git push
-          fi
       - name: Release documentation
+        env:
+          IS_LATEST: ${{ steps.latest-check.outputs.is_latest }}
         run: |
           cd gh-pages/
 
@@ -48,6 +43,14 @@ jobs:
             rm -r "$LIBRARY_VERSION"
           fi
           cp -r ../docs/dev "$LIBRARY_VERSION"
+
+          if [ "$IS_LATEST" = 'true' ]; then
+            if [ -d latest ]; then
+              rm -r latest
+            fi
+            cp -r ../docs/latest latest
+            sed -i "s/{{LIBRARY_VERSION}}/${LIBRARY_VERSION}/g" latest/toc.html
+          fi
 
           git add -N .
           # See <https://git-scm.com/docs/git-config#Documentation/git-config.txt-corefileMode>

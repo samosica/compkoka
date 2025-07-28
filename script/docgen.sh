@@ -35,6 +35,8 @@ compile(){
 
     local -r DOCDIR="$CURDIR/../docs/dev"
     mkdir -p "$DOCDIR"
+    # Remove outdated files
+    rm "$DOCDIR/**/*.html"
     find "$TMPDIR" -type f -name "*.html" -not \( -name "*.xmp.html" -o -name "std_*" \) -print0 \
     | sort -z \
     | xargs -0 -I {} -n1 cp {} "$DOCDIR"
