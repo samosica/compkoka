@@ -10,7 +10,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     env:
-      LIBRARY_VERSION: github.event.release.tag_name
+      LIBRARY_VERSION: ${{ github.event.release.tag_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
