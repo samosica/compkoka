@@ -33,7 +33,7 @@ compile(){
     cd "$TMPDIR"
     madoko --verbose --odir=. ./*.xmp.html
 
-    local -r DOCDIR="$CURDIR/../docs"
+    local -r DOCDIR="$CURDIR/../docs/dev"
     mkdir -p "$DOCDIR"
     find "$TMPDIR" -type f -name "*.html" -not \( -name "*.xmp.html" -o -name "std_*" \) -print0 \
     | sort -z \

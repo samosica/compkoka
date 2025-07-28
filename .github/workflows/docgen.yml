@@ -36,7 +36,7 @@ jobs:
             git rm -r "$LIBRARY_VERSION"
           fi
           mkdir "$LIBRARY_VERSION"
-          cp ../docs/* "$LIBRARY_VERSION"
+          cp ../docs/dev/* "$LIBRARY_VERSION"
           git add -N .
           # See <https://git-scm.com/docs/git-config#Documentation/git-config.txt-corefileMode>
           git config core.filemode false
