@@ -5,7 +5,8 @@ compkoka uses the following third-party softwares:
 ## koka-lang/koka
 
 - [Link](https://github.com/koka-lang/koka/tree/dev)
-- `docs/koka.css` in compkoka is retrieved from this software.
+- `docs/dev/koka.css` in compkoka is retrieved from this software.
+  It is copied to docs/v* in gh-pages branch and deployed to GitHub Pages.
 
 ```text
 Copyright 2012-2023, Microsoft Research, Daan Leijen.
