@@ -21,6 +21,15 @@ while getopts h OPT; do
     esac
 done
 
+get_koka_version(){
+    # version: x.x.x
+    koka --version | grep version | cut -d' ' -f2
+}
+
+if [ -z "${KOKA_VERSION-}" ]; then
+    KOKA_VERSION="v$(get_koka_version)"
+fi
+
 compile(){
     local -r TMPDIR=$(mktemp -d)
     # shellcheck disable=SC2064
@@ -32,6 +41,11 @@ compile(){
 
     cd "$TMPDIR"
     madoko --verbose --odir=. ./*.xmp.html
+
+    # Embed library version and compiler version
+    sed -i '\|</a></h1>|a\<p>compkoka ({{LIBRARY_VERSION}}). This is compiled by Koka {{KOKA_VERSION}}.</p>' toc.html
+    sed -i 's/{{LIBRARY_VERSION}}/dev/' toc.html
+    sed -i "s/{{KOKA_VERSION}}/${KOKA_VERSION}/" toc.html
 
     local -r DOCDIR="$CURDIR/../docs/dev"
     mkdir -p "$DOCDIR"

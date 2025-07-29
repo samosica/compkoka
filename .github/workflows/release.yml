@@ -45,6 +45,7 @@ jobs:
             rm -r "$LIBRARY_VERSION"
           fi
           cp -r ../../docs/dev "$LIBRARY_VERSION"
+          sed -i "s/dev/${LIBRARY_VERSION}/" "$LIBRARY_VERSION/toc.html"
 
           if [ "$IS_LATEST" = 'true' ]; then
             if [ -d latest ]; then
