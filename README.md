@@ -4,12 +4,14 @@
 
 A Koka library for competitive programming (work in progress)
 
-At the moment, compkoka is intended to be used with Koka v2.4.0.
-The other versions of the Koka compiler may fail to compile it.
+compkoka supports Koka v3.0.4 and later.
 
-The documentation is available through [this link](https://samosica.github.io/compkoka/toc.html).
+The documentation is available through:
 
-This library is licensed under the MIT License (see LICENSE), but only when you
+- [latest version](https://samosica.github.io/compkoka/latest/toc.html)
+- [development version](https://samosica.github.io/compkoka/dev/toc.html)
+
+compkoka is licensed under the MIT License (see LICENSE), but only when you
 submit a program containing the library to a competitive programming contest,
 you may omit the license statement.
 
