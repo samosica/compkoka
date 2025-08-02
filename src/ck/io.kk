@@ -1,6 +1,7 @@
 // Input/Output
 module ck/io
 
+import std/num/int64
 import std/os/path
 import std/os/file
 import std/os/readline
@@ -79,6 +80,22 @@ pub inline fun tuple5/read(
       s5.parse5
     )
     _ -> throw("expect five values")
+
+extern unsafe/read-int64-internal(i: int64): console int64
+  c inline "(scanf(\"%\" SCNd64, &#1), #1)"
+
+// Unsafe: read int64 from the standard input.
+// This function is necessary for strict time limits.
+pub fun unsafe/read-int64(): console int64
+  read-int64-internal(0.int64)
+
+extern unsafe/read-float64-internal(f: float64): console float64
+  c inline "(scanf(\"%lf\", &#1), #1)"
+
+// Unsafe: read float64 from the standard input
+// This function is necessary for strict time limits.
+pub fun unsafe/read-float64(): console float64
+  read-float64-internal(0.0)
 
 pub fun println(l: list<int>, sep: string = " "): console ()
   var first := True
