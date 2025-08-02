@@ -113,7 +113,7 @@ extern unsafe/read-float64-internal(f: float64): console float64
 pub fun unsafe/read-float64(): console float64
   read-float64-internal(0.0)
 
-pub fun println(l: list<int>, sep: string = " "): console ()
+pub fun list/println(l: list<int>, sep: string = " "): console ()
   var first := True
   foreach (l) fn(x)
     if first then first := False
