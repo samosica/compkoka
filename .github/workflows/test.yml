@@ -28,3 +28,16 @@ jobs:
           KOKA_VERSION: ${{ matrix.version }}
       - name: Test
         uses: ./.github/actions/test
+  # Reference:
+  # - <https://stackoverflow.com/questions/70275958/how-do-i-set-a-github-branch-protection-rule-based-on-the-success-or-failure-of>
+  post-test:
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+    steps:
+      - name: All tests passed
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - name: Some tests failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1
