@@ -2,7 +2,7 @@
 
 ## How to test
 
-Run `script/test.sh`.
+Run `script/test.sh` for tests and `script/io-test.sh` for IO tests.
 
 ## How to add a test file
 
@@ -46,3 +46,12 @@ Run `script/test.sh`.
       fenwick/main()
       vector/main()
     ```
+
+## How to add a test file using IO
+
+Add the following files into `test/io`.
+
+- `(testname).kk`: a program to be tested. `(testname)` must not include a hyphen
+  followed by a digit.
+- `(testname)-in`: an input to be passed to the program
+- `(testname)-out`: an expected output of the program

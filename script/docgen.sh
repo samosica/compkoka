@@ -23,7 +23,7 @@ done
 
 get_koka_version(){
     # version: x.x.x
-    koka --version | grep version | cut -d' ' -f2
+    koka --version | grep ^version | cut -d' ' -f2
 }
 
 if [ -z "${KOKA_VERSION-}" ]; then
