@@ -14,3 +14,6 @@ done
 for KOKA_COMPILE_OPTIONS in "${KOKA_COMPILE_OPTION_SETS[@]}"; do
     ./test.sh
 done
+for KOKA_COMPILE_OPTIONS in "${KOKA_COMPILE_OPTION_SETS[@]}"; do
+    ./io-test.sh
+done
