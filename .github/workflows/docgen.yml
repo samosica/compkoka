@@ -8,9 +8,29 @@ on:
       - "src/**/*.kk"
   workflow_dispatch:
 jobs:
+  test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ['v3.0.4', 'v3.1.3', 'v3.2.2']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .koka-version
+        run: echo "$KOKA_VERSION" >> .koka-version
+        env:
+          KOKA_VERSION: ${{ matrix.version }}
+
+      - name: Test
+        uses: ./.github/actions/test
+
   docgen:
     permissions:
       contents: write
+    needs: test
     runs-on: ubuntu-latest
     env:
       LIBRARY_VERSION: 'dev'

@@ -1,11 +1,5 @@
 name: Test
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "src/**/*.kk"
-      - "test/**/*.kk"
   pull_request:
     branches:
       - main
@@ -15,6 +9,8 @@ on:
   workflow_dispatch:
 jobs:
   test:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,12 +18,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Create .koka-version
         run: echo "$KOKA_VERSION" >> .koka-version
         env:
           KOKA_VERSION: ${{ matrix.version }}
+
       - name: Test
         uses: ./.github/actions/test
+
   # Reference:
   # - <https://stackoverflow.com/questions/70275958/how-do-i-set-a-github-branch-protection-rule-based-on-the-success-or-failure-of>
   post-test:
@@ -38,6 +37,7 @@ jobs:
       - name: All tests passed
         if: ${{ !(contains(needs.*.result, 'failure')) }}
         run: exit 0
+
       - name: Some tests failed
         if: ${{ contains(needs.*.result, 'failure') }}
         run: exit 1
