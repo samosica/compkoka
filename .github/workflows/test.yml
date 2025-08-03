@@ -1,20 +1,30 @@
 name: Test
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "src/**/*.kk"
-      - "test/**/*.kk"
   pull_request:
     branches:
       - main
-    paths:
-      - "src/**/*.kk"
-      - "test/**/*.kk"
   workflow_dispatch:
 jobs:
+  find-changes:
+    permissions:
+      pull-requests: read
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.find-changes.outputs.targets == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        id: find-changes
+        with:
+          filters: |
+            targets:
+              - 'src/**/*.kk'
+              - 'test/**/*.kk'
+
   test:
+    permissions:
+      contents: read
+    needs: find-changes
+    if: ${{ needs.find-changes.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,12 +32,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Create .koka-version
         run: echo "$KOKA_VERSION" >> .koka-version
         env:
           KOKA_VERSION: ${{ matrix.version }}
+
       - name: Test
         uses: ./.github/actions/test
+
   # Reference:
   # - <https://stackoverflow.com/questions/70275958/how-do-i-set-a-github-branch-protection-rule-based-on-the-success-or-failure-of>
   post-test:
@@ -38,6 +51,7 @@ jobs:
       - name: All tests passed
         if: ${{ !(contains(needs.*.result, 'failure')) }}
         run: exit 0
+
       - name: Some tests failed
         if: ${{ contains(needs.*.result, 'failure') }}
         run: exit 1

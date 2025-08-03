@@ -8,24 +8,78 @@ on:
       - "src/**/*.kk"
   workflow_dispatch:
 jobs:
+  test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ['v3.0.4', 'v3.1.3', 'v3.2.2']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .koka-version
+        run: echo "$KOKA_VERSION" >> .koka-version
+        env:
+          KOKA_VERSION: ${{ matrix.version }}
+
+      - name: Test
+        uses: ./.github/actions/test
+
   docgen:
     permissions:
       contents: write
+    needs: test
     runs-on: ubuntu-latest
     env:
       LIBRARY_VERSION: 'dev'
       KOKA_VERSION: 'v3.2.2'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Create .koka-version
-        run: echo "$KOKA_VERSION" >> .koka-version
-      - name: Generate documentation
-        uses: ./.github/actions/docgen
+      # References:
+      # - <https://docs.github.com/ja/apps/creating-github-apps/authenticating-with-a-github-app/making-authenticated-api-requests-with-a-github-app-in-a-github-actions-workflow>
+      # - <https://github.com/actions/create-github-app-token/tree/v2>
+      # - <https://docs.github.com/ja/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation>
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          APP_SLUG: ${{ steps.generate-token.outputs.app-slug }}
+
       - name: Setup Git
         run: |
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+          git config --global user.name "${APP_SLUG}[bot]"
+          git config --global user.email "${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+        env:
+          APP_SLUG: ${{ steps.generate-token.outputs.app-slug }}
+          USER_ID: ${{ steps.get-user-id.outputs.user-id }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Create .koka-version
+        run: echo "$KOKA_VERSION" >> .koka-version
+
+      - name: Generate documentation
+        uses: ./.github/actions/docgen
+
+      - name: Set extraheader
+        run: |
+          git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n "x-access-token:${GH_TOKEN}" | base64)"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+
       - name: Commit changes
         run: |
           git add -N docs
@@ -35,11 +89,26 @@ jobs:
             git commit -m "Update documentation"
             git push
           fi
+
+      - name: Remove extraheader
+        if: always()
+        run: |
+          git config --unset-all http.https://github.com/.extraheader
+
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
         with:
+          token: ${{ steps.generate-token.outputs.token }}
+          persist-credentials: false
           ref: 'gh-pages'
           path: 'gh-pages'
+
+      - name: Set extraheader
+        run: |
+          git -C gh-pages config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n "x-access-token:${GH_TOKEN}" | base64)"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+
       - name: Release documentation
         run: |
           cd gh-pages/
@@ -59,3 +128,8 @@ jobs:
             git commit -m "Release documentation ($LIBRARY_VERSION)"
             git push
           fi
+
+      - name: Remove extraheader
+        if: always()
+        run: |
+          git -C gh-pages config --unset-all http.https://github.com/.extraheader
