@@ -3,14 +3,28 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - "src/**/*.kk"
-      - "test/**/*.kk"
   workflow_dispatch:
 jobs:
+  find-changes:
+    permissions:
+      pull-requests: read
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.find-changes.outputs.targets == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: find-changes
+        with:
+          filters: |
+            targets:
+              - 'src/**/*.kk'
+              - 'test/**/*.kk'
+
   test:
     permissions:
       contents: read
+    needs: find-changes
+    if: ${{ needs.find-changes.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
