@@ -70,7 +70,7 @@ fun meld-pairs(ts: list<multiway-tree<a>>, ?(<): (a, a) -> bool): multiway-tree<
 
 // Remove the minimum element from a heap.
 // Do nothing if the given heap is empty
-pub inline fun erase-min(h: pairing-heap<a>, ?(<): (a, a) -> bool): pairing-heap<a>
+pub inline fun remove-min(h: pairing-heap<a>, ?(<): (a, a) -> bool): pairing-heap<a>
   match h.tree
     Emp -> h
     Bra(_, ss) -> PairingHeap(ss.meld-pairs)
