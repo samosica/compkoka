@@ -49,12 +49,12 @@ fun multiway-tree/meld(t1: multiway-tree<a>, t2: multiway-tree<a>, ?(<): (a, a) 
 pub inline fun meld(h1: pairing-heap<a>, h2: pairing-heap<a>, ?(<): (a, a) -> bool): pairing-heap<a>
   PairingHeap(meld(h1.tree, h2.tree))
 
-inline fun multiway-tree/insert(t: multiway-tree<a>, v: a, ?(<): (a, a) -> bool): multiway-tree<a>
+inline fun multiway-tree/add(t: multiway-tree<a>, v: a, ?(<): (a, a) -> bool): multiway-tree<a>
   meld(t, Bra(v, []))
 
 // Add a value to a heap
-pub inline fun insert(h: pairing-heap<a>, v: a, ?(<): (a, a) -> bool): pairing-heap<a>
-  PairingHeap(h.tree.insert(v))
+pub inline fun add(h: pairing-heap<a>, v: a, ?(<): (a, a) -> bool): pairing-heap<a>
+  PairingHeap(h.tree.add(v))
 
 // Return the minimum element of a heap
 pub inline fun min(h: pairing-heap<a>): maybe<a>

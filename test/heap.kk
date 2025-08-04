@@ -21,7 +21,7 @@ pub fun main()
     ]
     var h := heap/empty()
     foreach(l) fn(i)
-      h := h.insert(i)
+      h := h.add(i)
     var minis-rev := []
     while { !h.is-empty }
       val mini = h.min
@@ -32,8 +32,8 @@ pub fun main()
     expect(minis, list(0, 99))
   test("duplicates")
     var h := heap/empty()
-    h := h.insert(0)
-    h := h.insert(0)
+    h := h.add(0)
+    h := h.add(0)
     expect(h.min, Just(0))
     h := h.remove-min
     expect(h.min, Just(0))
