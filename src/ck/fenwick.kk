@@ -31,7 +31,7 @@ pub fun add(f: fenwick<h,a>, index: int, value: a, ?monoid: monoid<a>): <div,exn
   f.tree.modify fn(t)
     fun loop(i)
       if i <= s then
-        t[i] := (monoid.mul)(t[i], value)
+        t[i] := (?monoid.mul)(t[i], value)
         loop((i + i.rightmost-one).pretend-decreasing)
     loop(index)
 
@@ -45,8 +45,8 @@ pub fun prefix-sum(f: fenwick<h,a>, end: int, ?monoid: monoid<a>): <div,exn,read
     if i > 0 then
       loop(
         (i - i.rightmost-one).pretend-decreasing,
-        (monoid.mul)(sum, (!f.tree)[i])
+        (?monoid.mul)(sum, (!f.tree)[i])
       )
     else
       sum
-  loop(end, monoid.one)
+  loop(end, ?monoid.one)
