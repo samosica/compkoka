@@ -13,7 +13,7 @@ abstract struct fenwick<h,a>
 pub fun fenwick(size: int, ?monoid: monoid<a>): alloc<h> fenwick<h,a>
   Fenwick(ref(vector(size + 1, monoid.one)))
 
-pub fun size(f: fenwick<h,a>): <div,read<h>> int
+pub inline fun size(f: fenwick<h,a>): <div,read<h>> int
   (!f.tree).length - 1
 
 // Find the rightmost 1 of the binary representation of `x`.
@@ -29,11 +29,8 @@ pub fun add(f: fenwick<h,a>, index: int, value: a, ?monoid: monoid<a>): <div,exn
   val s = f.size
   if index <= 0 || index > s then "out of bounds".throw
   f.tree.modify fn(t)
-    // body, body2 をインライン展開すると segmentation fault が発生する (?)
-    // また、local<_> を _ に変えると型推論が失敗する (?)
-    fun loop(i: int)
+    fun loop(i)
       if i <= s then
-        // s の代わりに f.size を使うと型に read<_> が2回現れてしまう
         t[i] := (monoid.mul)(t[i], value)
         loop((i + i.rightmost-one).pretend-decreasing)
     loop(index)
@@ -44,10 +41,12 @@ pub fun add(f: fenwick<h,a>, index: int, value: a, ?monoid: monoid<a>): <div,exn
 // Raise an exception if `end` < 0 or `end` > `f.size`.
 pub fun prefix-sum(f: fenwick<h,a>, end: int, ?monoid: monoid<a>): <div,exn,read<h>> a
   if end < 0 || end > f.size then "out of bounds".throw
-  var sum := monoid.one
-  fun loop(i: int)
+  fun loop(i, sum)
     if i > 0 then
-      sum := (monoid.mul)(sum, (!f.tree)[i])
-      loop((i - i.rightmost-one).pretend-decreasing)
-  loop(end)
-  sum
+      loop(
+        (i - i.rightmost-one).pretend-decreasing,
+        (monoid.mul)(sum, (!f.tree)[i])
+      )
+    else
+      sum
+  loop(end, monoid.one)
