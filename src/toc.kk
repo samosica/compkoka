@@ -1,5 +1,6 @@
 module toc
 
+pub import ck/algebra/monoid
 pub import ck/binsearch
 pub import ck/fenwick
 pub import ck/heap

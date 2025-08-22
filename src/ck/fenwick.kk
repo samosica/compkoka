@@ -4,15 +4,16 @@ module ck/fenwick
 import std/num/int64
 import std/core/undiv
 import std/core/unsafe
+import ck/algebra/monoid
 
-abstract struct fenwick<h>
-  tree: ref<h,vector<int>>
+abstract struct fenwick<h,a>
+  tree: ref<h,vector<a>>
 
 // Create a Fenwick tree
-pub fun fenwick(size: int): alloc<h> fenwick<h>
-  Fenwick(ref(vector(size + 1, 0)))
+pub fun fenwick(size: int, ?monoid: monoid<a>): alloc<h> fenwick<h,a>
+  Fenwick(ref(vector(size + 1, monoid.one)))
 
-pub fun size(f: fenwick<h>): read<h> int
+pub inline fun size(f: fenwick<h,a>): <div,read<h>> int
   (!f.tree).length - 1
 
 // Find the rightmost 1 of the binary representation of `x`.
@@ -24,37 +25,28 @@ fun rightmost-one(x: int)
 // Add a value to an element.
 // The first element is at position 1 (1-based).
 // Raise an exception if `index` <= 0 or `index` > `f.size`.
-pub fun add(f: fenwick<h>, index: int, value: int): <exn,read<h>,write<h>> ()
+pub fun add(f: fenwick<h,a>, index: int, value: a, ?monoid: monoid<a>): <div,exn,read<h>,write<h>> ()
   val s = f.size
   if index <= 0 || index > s then "out of bounds".throw
   f.tree.modify fn(t)
-    // body, body2 をインライン展開すると segmentation fault が発生する (?)
-    // また、local<_> を _ に変えると型推論が失敗する (?)
-    fun body(): <local<_>,exn> ()
-      var i := index
-      pretend-no-div{
-        fun body2(): _ ()
-          // s の代わりに f.size を使うと型に read<_> が2回現れてしまう
-          while { i <= s }
-            val i' = i
-            // mask<local> と unsafe-no-exn の順序は入れ替えてはいけない
-            mask<local>{ t[i'] := t[i'] + value }
-            i := i + i.rightmost-one
-        body2()
-      }
-    body()
+    fun loop(i)
+      if i <= s then
+        t[i] := (?monoid.mul)(t[i], value)
+        loop((i + i.rightmost-one).pretend-decreasing)
+    loop(index)
 
 // Return the sum from the first element to the `end`-th element (inclusive).
 // The first element is at position 1 (1-based).
 // For convenience, return 0 if `end` = 0.
 // Raise an exception if `end` < 0 or `end` > `f.size`.
-pub fun prefix-sum(f: fenwick<h>, end: int): <exn,read<h>> int
+pub fun prefix-sum(f: fenwick<h,a>, end: int, ?monoid: monoid<a>): <div,exn,read<h>> a
   if end < 0 || end > f.size then "out of bounds".throw
-  var sum := 0
-  var i := end
-  pretend-no-div {
-    while { i > 0 }
-      sum := sum + (!f.tree)[i]
-      i := i - i.rightmost-one
-  }
-  sum
+  fun loop(i, sum)
+    if i > 0 then
+      loop(
+        (i - i.rightmost-one).pretend-decreasing,
+        (?monoid.mul)(sum, (!f.tree)[i])
+      )
+    else
+      sum
+  loop(end, ?monoid.one)
