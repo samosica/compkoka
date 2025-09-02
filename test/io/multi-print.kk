@@ -1,6 +1,4 @@
-import std/num/float64
 import ck/io
-import ck/parser
 
 fun main()
   print(1, 2)

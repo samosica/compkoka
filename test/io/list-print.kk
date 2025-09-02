@@ -1,8 +1,8 @@
-import std/num/float64
 import ck/io
-import ck/parser
 
 fun main()
-  [1, 2, 3].print
+  // Note: until v3.1.3, the compiler cannot resolve print and println without
+  // qualifications.
+  ck/io/list/print([1, 2, 3])
   "".println
-  [4, 5, 6].println
+  ck/io/list/println([4, 5, 6])
