@@ -113,10 +113,89 @@ extern unsafe/read-float64-internal(f: float64): console float64
 pub fun unsafe/read-float64(): console float64
   read-float64-internal(0.0)
 
-pub fun list/println(l: list<int>, sep: string = " "): console ()
+/// Implementation notes of */print:
+/// - The implicit parameters are ?print not ?show because show/string/show is
+///   chosen for strings in default and it outputs unnecessary double quotes.
+/// - The inlined version of default/double/print was faster than the non-inlined
+///   version in a benchmark. But for default/triple/print and its successors,
+///   inlining made a slight difference in performance. Hence only default/double/print
+///   is inlined.
+
+pub inline fun default/double/print(a: a, b: b, ?a/print: a -> console (), ?b/print: b -> console ())
+  print(a)
+  print(" ")
+  print(b)
+
+pub inline fun default/double/println(a: a, b: b, ?a/print: a -> console (), ?b/print: b -> console ())
+  print(a, b)
+  print("\n")
+
+pub fun default/triple/print(
+  a: a, b: b, c: c,
+  ?a/print: a -> console (), ?b/print: b -> console (), ?c/print: c -> console ()
+)
+  print(a)
+  print(" ")
+  print(b)
+  print(" ")
+  print(c)
+
+pub fun default/triple/println(
+  a: a, b: b, c: c,
+  ?a/print: a -> console (), ?b/print: b -> console (), ?c/print: c -> console ()
+)
+  print(a, b, c)
+  print("\n")
+
+pub fun default/quadruple/print(
+  a: a, b: b, c: c, d: d,
+  ?a/print: a -> console (), ?b/print: b -> console (), ?c/print: c -> console (), ?d/print: d -> console ()
+)
+  print(a)
+  print(" ")
+  print(b)
+  print(" ")
+  print(c)
+  print(" ")
+  print(d)
+
+pub fun default/quadruple/println(
+  a: a, b: b, c: c, d: d,
+  ?a/print: a -> console (), ?b/print: b -> console (), ?c/print: c -> console (), ?d/print: d -> console ()
+)
+  print(a, b, c, d)
+  print("\n")
+
+pub fun default/quintuple/print(
+  a: a, b: b, c: c, d: d, e: e,
+  ?a/print: a -> console (), ?b/print: b -> console (), ?c/print: c -> console (), ?d/print: d -> console (), ?e/print: e -> console ()
+)
+  print(a)
+  print(" ")
+  print(b)
+  print(" ")
+  print(c)
+  print(" ")
+  print(d)
+  print(" ")
+  print(e)
+
+pub fun default/quintuple/println(
+  a: a, b: b, c: c, d: d, e: e,
+  ?a/print: a -> console (), ?b/print: b -> console (), ?c/print: c -> console (), ?d/print: d -> console (), ?e/print: e -> console ()
+)
+  print(a, b, c, d, e)
+  print("\n")
+
+pub fun list/print(l: list<a>, sep: string = " ", ?print: a -> console ())
   var first := True
-  foreach (l) fn(x)
-    if first then first := False
-    else sep.print
+  l.foreach fn(x)
+    if first then first := False else sep.print
+    x.print
+
+pub fun list/println(l: list<a>, sep: string = " ", ?print: a -> console ())
+  var first := True
+  l.foreach fn(x)
+    if first then first := False else sep.print
     x.print
   "".println
