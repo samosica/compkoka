@@ -187,10 +187,9 @@ pub fun default/quintuple/println(
   print(a, b, c, d, e)
   print("\n")
 
-pub fun list/println(l: list<int>, sep: string = " "): console ()
+pub fun list/println(l: list<a>, sep: string = " ", ?print: a -> console ())
   var first := True
-  foreach (l) fn(x)
-    if first then first := False
-    else sep.print
+  l.foreach fn(x)
+    if first then first := False else sep.print
     x.print
   "".println
