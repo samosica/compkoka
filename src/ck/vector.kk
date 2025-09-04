@@ -2,35 +2,69 @@
 module ck/vector
 
 import std/core/undiv
-import std/num/int32
-import std/num/random
 
-// Quicksort
-pub fun quicksort(v: vector<a>, comp: (a, a) -> order): <pure,ndet> vector<a>
-  var sorted := v
-  fun swap(i: int, j: int)
-    val tmp = sorted[i]
-    sorted[i] := sorted[j]
-    sorted[j] := tmp
-  fun partition(l: int, r: int, i: int, p)
-    if l >= r then
-      i
-    elif p(sorted[l]) then
-      swap(i, l)
-      partition((l + 1).pretend-decreasing, r, i + 1, p)
-    else
-      partition((l + 1).pretend-decreasing, r, i, p)
-  fun sort-intl(l: int, r: int)
-    if r - l <= 1 then return ()
-    val pivot-i = srandom-int32-range(l.int32, r.int32).int
-    val pivot = sorted[pivot-i]
-    swap(l, pivot-i)
-    val i = partition(l + 1, r, l, fn(x) { comp(x, pivot).is-lt })
-    val j = partition(i + 1, r, i, fn(x) { comp(x, pivot).is-eq })
-    sort-intl(l, i)
-    sort-intl(j, r)
-  sort-intl(0, v.length)
-  sorted
+// Note: `@unsafe-vector` is introduced in Koka v3.1.3.
+
+// Unsafe function.
+// This function is an internal function in the standard library.
+// See <https://koka-lang.github.io/koka/doc/std_core_vector.html>
+inline extern unsafe-vector(n: ssize_t): total vector<a>
+  c inline "kk_vector_alloc(#1, kk_box_null(), kk_context())"
+
+// Unsafe function.
+// This function is an internal function in the standard library.
+// See <https://koka-lang.github.io/koka/doc/std_core_vector.html>
+inline extern unsafe-idx(^v: vector<a>, index: ssize_t): total a
+  c "kk_vector_at_borrow"
+
+// Unsafe function.
+// This function is an internal function in the standard library.
+// See <https://koka-lang.github.io/koka/doc/std_core_vector.html>
+inline extern unsafe-assign(v: vector<a>, index: ssize_t, value: a): total ()
+  c "kk_vector_unsafe_assign"
+
+/// Implementation notes of sort:
+/// - The implementation is merge sort.
+/// - It is 2 times faster than when we do not use unsafe-* functions.
+
+// Stable sort
+pub fun sort(v: vector<a>, ?(<): (a, a) -> bool): pure vector<a>
+  var res := v
+  var temp := unsafe-vector((v.length / 2).ssize_t)
+  var p := 0
+  var l1 := 0
+  var l2 := 0
+
+  fun loop(l: int, r: int)
+    if r - l <= 1 then
+      return ()
+
+    val m = (l + r) / 2
+    loop(l.pretend-decreasing, m)
+    loop(m.pretend-decreasing, r)
+
+    for(l, m - 1) fn(i)
+      temp.unsafe-assign((i - l).ssize_t, res.unsafe-idx(i.ssize_t))
+
+    p := l
+    l1 := l
+    l2 := m
+    while { l1 < m && l2 < r }
+      if res.unsafe-idx(l2.ssize_t) < temp.unsafe-idx((l1 - l).ssize_t) then
+        res.unsafe-assign(p.ssize_t, res.unsafe-idx(l2.ssize_t))
+        l2 := l2 + 1
+      else
+        res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
+        l1 := l1 + 1
+      p := p + 1
+
+    while { l1 < m }
+      res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
+      l1 := l1 + 1
+      p := p + 1
+
+  loop(0, v.length)
+  res
 
 // Return a vector whose `k`-th (0-based) element is the length of the longest
 // common prefix of `v` and the suffix starting with `v[k]`.
