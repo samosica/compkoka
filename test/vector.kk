@@ -34,7 +34,17 @@ pub fun main()
       (48, 2), (47, 2), (20, 2), (42, 2), (45, 2), (22, 2), ( 4, 2), ( 3, 2), (31, 2), ( 1, 2),
       (29, 2), (13, 2), (25, 2), (16, 2), (36, 2), (39, 2), ( 0, 2), (24, 2), (15, 2), (12, 2)
     ].vector
-    expect(v.sort(fn(p1, p2) p1.fst < p2.fst).list, vector-init-total(100, fn(i) (i / 2, i % 2 + 1)).list)
+    expect(
+      v.sort(?(<)=fn(p1, p2) p1.fst < p2.fst).list,
+      vector-init-total(100, fn(i) (i / 2, i % 2 + 1)).list,
+      // Note: the following lines are necessary for Koka v3.1.3 and earlier versions.
+      ?(==)=fn(l1, l2)
+        list/(==)(
+          l1,
+          l2,
+          ?(==)=fn(p1, p2) tuple2/(==)(p1, p2, ?fst/(==)=int/(==), ?snd/(==)=int/(==))
+        )
+    )
   test("z-algorithm")
     expect("abaaaba".vector.z-algorithm((==)).list, [7, 0, 1, 1, 3, 0, 1])
   test("search (short, found)")

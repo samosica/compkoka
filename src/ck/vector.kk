@@ -3,6 +3,14 @@ module ck/vector
 
 import std/core/undiv
 
+// Note: `@unsafe-vector` is introduced in Koka v3.1.3.
+
+// Unsafe function.
+// This function is an internal function in the standard library.
+// See <https://koka-lang.github.io/koka/doc/std_core_vector.html>
+inline extern unsafe-vector(n: ssize_t): total vector<a>
+  c inline "kk_vector_alloc(#1, kk_box_null(), kk_context())"
+
 // Unsafe function.
 // This function is an internal function in the standard library.
 // See <https://koka-lang.github.io/koka/doc/std_core_vector.html>
@@ -22,7 +30,7 @@ inline extern unsafe-assign(v: vector<a>, index: ssize_t, value: a): total ()
 // Stable sort
 pub fun sort(v: vector<a>, ?(<): (a, a) -> bool): pure vector<a>
   var res := v
-  var temp := @unsafe-vector((v.length / 2).ssize_t)
+  var temp := unsafe-vector((v.length / 2).ssize_t)
   var p := 0
   var l1 := 0
   var l2 := 0
