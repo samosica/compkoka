@@ -3,6 +3,61 @@ module ck/vector
 
 import std/core/undiv
 
+// Unsafe function.
+// This function is an internal function in the standard library.
+// See <https://koka-lang.github.io/koka/doc/std_core_vector.html>
+inline extern unsafe-idx(^v: vector<a>, index: ssize_t): total a
+  c "kk_vector_at_borrow"
+
+// Unsafe function.
+// This function is an internal function in the standard library.
+// See <https://koka-lang.github.io/koka/doc/std_core_vector.html>
+inline extern unsafe-assign(v: vector<a>, index: ssize_t, value: a): total ()
+  c "kk_vector_unsafe_assign"
+
+/// Implementation notes of sort:
+/// - The implementation is merge sort.
+/// - It is 2 times faster than when we do not use unsafe-* functions.
+
+// Stable sort
+pub fun sort(v: vector<a>, ?(<): (a, a) -> bool): pure vector<a>
+  var res := v
+  var temp := @unsafe-vector((v.length / 2).ssize_t)
+  var p := 0
+  var l1 := 0
+  var l2 := 0
+
+  fun loop(l: int, r: int)
+    if r - l <= 1 then
+      return ()
+
+    val m = (l + r) / 2
+    loop(l.pretend-decreasing, m)
+    loop(m.pretend-decreasing, r)
+
+    for(l, m - 1) fn(i)
+      temp.unsafe-assign((i - l).ssize_t, res.unsafe-idx(i.ssize_t))
+
+    p := l
+    l1 := l
+    l2 := m
+    while { l1 < m && l2 < r }
+      if res.unsafe-idx(l2.ssize_t) < temp.unsafe-idx((l1 - l).ssize_t) then
+        res.unsafe-assign(p.ssize_t, res.unsafe-idx(l2.ssize_t))
+        l2 := l2 + 1
+      else
+        res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
+        l1 := l1 + 1
+      p := p + 1
+
+    while { l1 < m }
+      res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
+      l1 := l1 + 1
+      p := p + 1
+
+  loop(0, v.length)
+  res
+
 // Return a vector whose `k`-th (0-based) element is the length of the longest
 // common prefix of `v` and the suffix starting with `v[k]`.
 pub fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): exn vector<int>
