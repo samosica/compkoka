@@ -1,25 +1,20 @@
-/* Map
-
-Keys are integers and values may have an arbitrary type.
-*/
+// Map
 module ck/map
-
-// TODO: write test
 
 type skewness
   L
   E
   R
 
-abstract type tree<v>
+abstract type tree<k,v>
   Emp
-  Bra{ key: int; value: v; skew: skewness; left: tree<v>; right: tree<v> }
+  Bra{ key: k; value: v; skew: skewness; left: tree<k,v>; right: tree<k,v> }
 
 // Note: `map<v>` stores the number of key-value pairs, `size`, in order to
 // compute it in constant time, not in logarithmic time.
 
-value struct map<v>
-  tree: tree<v>
+value struct map<k,v>
+  tree: tree<k,v>
   // The number of key-value pairs
   pub size: int
 
@@ -29,25 +24,25 @@ fun skewness/show(s: skewness): string
     E -> "E"
     R -> "R"
 
-fun tree/show(t: tree<v>, ?show: v -> string): string
+fun tree/show(t: tree<k,v>, ?k/show: k -> string, ?v/show: v -> string): string
   match t
     Emp -> "Emp"
     Bra(k, v, s, l, r) ->
       "Bra(" ++ k.show ++ ", " ++ v.show ++ ", " ++ s.show ++ ", " ++ l.show ++ ", " ++ r.show ++ ")"
 
-pub fun map/show(m: map<v>, ?show: v -> string): string
+pub fun map/show(m: map<k,v>, ?k/show: k -> string, ?v/show: v -> string): string
   m.tree.show
 
 // Check whether a map is empty.
-pub fun is-empty(m: map<v>): bool
+pub fun is-empty(m: map<k,v>): bool
   match m.tree
     Emp -> True
     _ -> False
 
 // Create an empty map.
-pub val empty: forall<v> map<v> = Map(Emp, 0)
+pub val empty: forall<k,v> map<k,v> = Map(Emp, 0)
 
-fun tree/contains(t: tree<v>, key: int): bool
+fun tree/contains(t: tree<k,v>, key: k, ?cmp: (k, k) -> order): bool
   match t
     Emp -> False
     Bra(k, _, _, _, _) | key == k -> True
@@ -56,14 +51,14 @@ fun tree/contains(t: tree<v>, key: int): bool
 
 // Check whether a map contains a key.
 // The time complexity is O(log size).
-pub fun contains(m: map<v>, key: int): bool
+pub fun contains(m: map<k,v>, key: k, ?cmp: (k, k) -> order): bool
   m.tree.contains(key)
 
 // 左の部分木が 2 だけ高くなっていたら修正する
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
 // 要素の削除の場合、「右」の部分木から削除したときであり、逆になるので注意が必要
 // 2番目の戻り値が True のとき、修正前後で木の高さは変わらない
-fun adjust-left(t: tree<v>): (tree<v>, bool)
+fun adjust-left(t: tree<k,v>): (tree<k,v>, bool)
   // a, b, c: keys
   // x, y, z: values
   match t
@@ -81,7 +76,7 @@ fun adjust-left(t: tree<v>): (tree<v>, bool)
       (Bra(c, z, E, Bra(b, y, L, l', l''), Bra(a, x, E, r'', r)), False)
     _ -> (t, False) // for exhaustive check
 
-fun adjust-right(t: tree<v>): (tree<v>, bool)
+fun adjust-right(t: tree<k,v>): (tree<k,v>, bool)
   match t
     Bra(a, x, L, l, r) -> (Bra(a, x, E, l, r), False)
     Bra(a, x, E, l, r) -> (Bra(a, x, R, l, r), True)
@@ -101,7 +96,7 @@ fun adjust-right(t: tree<v>): (tree<v>, bool)
 //    t' : t に (key, value) を挿入して得られる木
 // grown : 高さが 1 増えたか
 // added : key が追加されたか
-fun add-intl(t: tree<v>, key: int, value: v): (tree<v>, bool, bool)
+fun add-intl(t: tree<k,v>, key: k, value: v, ?cmp: (k, k) -> order): (tree<k,v>, bool, bool)
   match t
     Emp -> (Bra(key, value, E, Emp, Emp), True, True)
     Bra(k, _, s, l, r) | key == k ->
@@ -122,7 +117,7 @@ fun add-intl(t: tree<v>, key: int, value: v): (tree<v>, bool, bool)
 // Add a key-value pair to a map.
 // If the given key already exists, update the corresponding value.
 // The time complexity is O(log size).
-pub fun add(m: map<v>, key: int, value: v): map<v>
+pub fun add(m: map<k,v>, key: k, value: v, ?cmp: (k, k) -> order): map<k,v>
   val (t, _, added) = m.tree.add-intl(key, value)
   Map(t, if added then m.size + 1 else m.size)
 
@@ -130,7 +125,7 @@ pub fun add(m: map<v>, key: int, value: v): map<v>
 //    m' : key の頂点を更新または追加した m
 // grown : 高さが 1 増えたか
 // added : key が追加されたか
-fun update-intl(t: tree<v>, key: int, f: maybe<v> -> e v): e (tree<v>, bool, bool)
+fun update-intl(t: tree<k,v>, key: k, f: maybe<v> -> e v, ?cmp: (k, k) -> order): e (tree<k,v>, bool, bool)
   match t
     Emp ->
       (Bra(key, f(Nothing), E, Emp, Emp), True, True) // key を追加
@@ -153,11 +148,11 @@ fun update-intl(t: tree<v>, key: int, f: maybe<v> -> e v): e (tree<v>, bool, boo
 // If `key` already exists, replace the corresponding value `v` with `f(Just(v))`.
 // Otherwise, add the pair of `key` and `f(Nothing)`.
 // The time complexity is O(log size).
-pub fun update(m: map<v>, key: int, f: maybe<v> -> e v): e map<v>
+pub fun update(m: map<k,v>, key: k, f: maybe<v> -> e v, ?cmp: (k, k) -> order): e map<k,v>
   val (t, _, added) = m.tree.update-intl(key, f)
   Map(t, if added then m.size + 1 else m.size)
 
-fun tree/min-binding(t: tree<v>): maybe<(int, v)>
+fun tree/min-binding(t: tree<k,v>): maybe<(k, v)>
   match t
     Emp -> Nothing
     Bra(k, v, _, Emp, _) -> Just((k, v))
@@ -165,10 +160,10 @@ fun tree/min-binding(t: tree<v>): maybe<(int, v)>
 
 // Return the key-value pair of the smallest key in a map.
 // The time complexity is O(log size).
-pub fun min-binding(m: map<v>): maybe<(int, v)>
+pub fun min-binding(m: map<k,v>): maybe<(k, v)>
   m.tree.min-binding
 
-fun tree/max-binding(t: tree<v>): maybe<(int, v)>
+fun tree/max-binding(t: tree<k,v>): maybe<(k, v)>
   match t
     Emp -> Nothing
     Bra(k, v, _, _, Emp) -> Just((k, v))
@@ -176,14 +171,14 @@ fun tree/max-binding(t: tree<v>): maybe<(int, v)>
 
 // Return the key-value pair of the largest key in a map.
 // The time complexity is O(log size).
-pub fun max-binding(m: map<v>): maybe<(int, v)>
+pub fun max-binding(m: map<k,v>): maybe<(k, v)>
   m.tree.max-binding
 
 // remove-intl(t, key) = (t', shrinked, deleted)
 //          t' : t から key をなくした木
 //    shrinked : 高さが 1 減ったか
 //     deleted : key を削除したか (元からなければ False)
-fun remove-intl(t: tree<v>, key: int): (tree<v>, bool, bool)
+fun remove-intl(t: tree<k,v>, key: k, ?cmp: (k, k) -> order): (tree<k,v>, bool, bool)
   match t
     Emp -> (Emp, False, False)
     Bra(k, v, s, l, r) | key < k ->
@@ -220,11 +215,11 @@ fun remove-intl(t: tree<v>, key: int): (tree<v>, bool, bool)
 // Remove a key and the corresponding value from a map.
 // Do nothing if the given key does not exist.
 // The time complexity is O(log size).
-pub fun remove(m: map<v>, key: int): map<v>
+pub fun remove(m: map<k,v>, key: k, ?cmp: (k, k) -> order): map<k,v>
   val (t, _, deleted) = m.tree.remove-intl(key)
   Map(t, if deleted then m.size - 1 else m.size)
 
-fun tree/get(t: tree<v>, key: int): maybe<v>
+fun tree/get(t: tree<k,v>, key: k, ?cmp: (k, k) -> order): maybe<v>
   match t
     Emp -> Nothing
     Bra(k, v, _, _, _) | key == k -> Just(v)
@@ -233,5 +228,5 @@ fun tree/get(t: tree<v>, key: int): maybe<v>
 
 // Get the value of a specified key.
 // The time complexity is O(log size).
-pub fun get(m: map<v>, key: int): maybe<v>
+pub fun get(m: map<k,v>, key: k, ?cmp: (k, k) -> order): maybe<v>
   m.tree.get(key)
