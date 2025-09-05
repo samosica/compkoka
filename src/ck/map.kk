@@ -48,7 +48,7 @@ pub fun contains(m: map<v>, key: int): bool
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
 // 要素の削除の場合、「右」の部分木から削除したときであり、逆になるので注意が必要
 // 2番目の戻り値が True のとき、修正前後で木の高さは変わらない
-fun adjust-l(m: map<v>): (map<v>, bool)
+fun adjust-left(m: map<v>): (map<v>, bool)
   // a, b, c: keys
   // x, y, z: values
   match m
@@ -66,7 +66,7 @@ fun adjust-l(m: map<v>): (map<v>, bool)
       (Bra(c, z, E, Bra(b, y, L, l', l''), Bra(a, x, E, r'', r)), False)
     _ -> (m, False) // for exhaustive check
 
-fun adjust-r(m: map<v>): (map<v>, bool)
+fun adjust-right(m: map<v>): (map<v>, bool)
   match m
     Bra(a, x, L, l, r) -> (Bra(a, x, E, l, r), False)
     Bra(a, x, E, l, r) -> (Bra(a, x, R, l, r), True)
@@ -94,12 +94,12 @@ fun insert-intl(m: map<v>, key: int, value: v): (map<v>, bool)
       val (l', grown) = l.insert-intl(key, value)
       val m' = Bra(k, v, s, l', r)
       if !grown then return (m', False)
-      m'.adjust-l
+      m'.adjust-left
     Bra(k, v, s, l, r) ->
       val (r', grown) = r.insert-intl(key, value)
       val m' = Bra(k, v, s, l, r')
       if !grown then return (m', False)
-      m'.adjust-r
+      m'.adjust-right
 
 // Add a key-value pair to a map.
 // If the given key already exists, update the corresponding value
@@ -131,13 +131,13 @@ fun erase-intl(m: map<v>, key: int): (map<v>, bool, bool)
       val (l', deleted, shrinked) = l.erase-intl(key)
       val m' = Bra(k, v, s, l', r)
       if !shrinked then return (m', deleted, False)
-      val (m'', not-shrinked') = m'.adjust-r
+      val (m'', not-shrinked') = m'.adjust-right
       (m'', deleted, !not-shrinked')
     Bra(k, v, s, l, r) | key > k ->
       val (r', deleted, shrinked) = r.erase-intl(key)
       val m' = Bra(k, v, s, l, r')
       if !shrinked then return (m', deleted, False)
-      val (m'', not-shrinked') = m'.adjust-l
+      val (m'', not-shrinked') = m'.adjust-left
       (m'', deleted, !not-shrinked')
     Bra(_, _, s, l, r) ->
       match r.min-binding
@@ -145,7 +145,7 @@ fun erase-intl(m: map<v>, key: int): (map<v>, bool, bool)
           val (r', _, shrinked) = r.erase-intl(min-k)
           val m' = Bra(min-k, min-v, s, l, r')
           if !shrinked then return (m', True, False)
-          val (m'', not-shrinked') = m'.adjust-l
+          val (m'', not-shrinked') = m'.adjust-left
           return (m'', True, !not-shrinked')
         _ -> ()
       match l.max-binding
@@ -153,7 +153,7 @@ fun erase-intl(m: map<v>, key: int): (map<v>, bool, bool)
           val (l', _, shrinked) = l.erase-intl(max-k)
           val m' = Bra(max-k, max-v, s, l', r)
           if !shrinked then return (m', True, False)
-          val (m'', not-shrinked') = m'.adjust-r
+          val (m'', not-shrinked') = m'.adjust-right
           return (m'', True, !not-shrinked')
         _ -> ()
       (Emp, True, True)
