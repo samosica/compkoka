@@ -58,3 +58,29 @@ pub fun main()
     for(10) fn(k)
       expect(m'.get(k), Just(k))
     expect(m'.size, 11)
+  test("foreach")
+    val m = [5, 2, 9, 0, 8, 4, 7, 6, 3, 1].foldl(map/empty, fn(m, v) m.add(v, v))
+    var l := []
+    m.foreach fn(k, v)
+      l := Cons((k, v), l)
+    // Arrange elements in chronological order
+    l := l.reverse
+    expect(
+      l,
+      list(0, 9).map(fn(i) (i, i)),
+      // Note: the following lines are necessary for Koka v3.1.3 and earlier versions.
+      ?(==)=fn(l1, l2)
+        list/(==)(
+          l1,
+          l2,
+          ?(==)=fn(p1, p2) tuple2/(==)(p1, p2, ?fst/(==)=int/(==), ?snd/(==)=int/(==))
+        )
+    )
+  test("foreach-key")
+    val m = [5, 2, 9, 0, 8, 4, 7, 6, 3, 1].foldl(map/empty, fn(m, v) m.add(v, v))
+    var l := []
+    m.foreach-key fn(k)
+      l := Cons(k, l)
+    // Arrange elements in chronological order
+    l := l.reverse
+    expect(l, list(0, 9))

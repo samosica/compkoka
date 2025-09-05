@@ -230,3 +230,27 @@ fun tree/get(t: tree<k,v>, key: k, ?cmp: (k, k) -> order): maybe<v>
 // The time complexity is O(log size).
 pub fun get(m: map<k,v>, key: k, ?cmp: (k, k) -> order): maybe<v>
   m.tree.get(key)
+
+pub fun tree/foreach(t: tree<k,v>, action: (k, v) -> e ()): e()
+  match t
+    Emp -> ()
+    Bra(k, v, _, l, r) ->
+      l.foreach(action)
+      action(k, v)
+      r.foreach(action)
+
+// Iterate over key-value pairs in ascending order of their keys
+pub fun foreach(m: map<k,v>, action: (k, v) -> e ()): e()
+  m.tree.foreach(action)
+
+pub fun tree/foreach-key(t: tree<k,v>, action: k -> e ()): e()
+  match t
+    Emp -> ()
+    Bra(k, _, _, l, r) ->
+      l.foreach-key(action)
+      action(k)
+      r.foreach-key(action)
+
+// Iterate over keys in ascending order
+pub fun foreach-key(m: map<k,v>, action: k -> e ()): e()
+  m.tree.foreach-key(action)
