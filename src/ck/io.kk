@@ -192,8 +192,5 @@ pub fun list/print(l: list<a>, sep: string = " ", ?print: a -> console ())
     x.print
 
 pub fun list/println(l: list<a>, sep: string = " ", ?print: a -> console ())
-  var first := True
-  l.foreach fn(x)
-    if first then first := False else sep.print
-    x.print
+  l.print(sep)
   "".println
