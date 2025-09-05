@@ -36,6 +36,14 @@ pub fun is-empty(t: map<b>): bool
 // Create an empty map.
 pub val empty: forall<b> map<b> = Emp
 
+// Check whether a map contains a key
+pub fun contains(m: map<b>, k: int): bool
+  match m
+    Emp -> False
+    Bra(k', _, _, _, _) | k == k' -> True
+    Bra(k', _, _, l, _) | k < k' -> l.contains(k)
+    Bra(_, _, _, _, r) -> r.contains(k)
+
 // 左の部分木が 2 だけ高くなっていたら修正する
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
 // 要素の削除の場合、「右」の部分木から削除したときであり、逆になるので注意が必要
