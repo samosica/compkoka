@@ -112,22 +112,15 @@ fun naive-search(v: vector<a>, sub: vector<a>, start: int, ?(==): (a, a) -> bool
 // The first element is at position 0 (0-based).
 // `start` specifies the starting position to search.
 pub fun search(v: vector<a>, sub: vector<a>, start: int = 0, ?(==): (a, a) -> bool): <div,exn> maybe<int>
-  // TODO: test
-  // this optimisation works fine?
+  // this line improves performance?
   if sub.length < 16 then return naive-search(v, sub, start)
 
   if start < 0 || start + sub.length > v.length then return Nothing
-  // Note: inline expansion of `create-w` causes an error like
-  // `error: ‘iev_xxxx’ undeclared`.
-  fun create-w()
-    // sub.length >= 16 so sub[0] exists
-    var w := vector(sub.length + v.length - start, sub[0])
-    for (0, sub.length - 1) fn(i)
-      w[i] := sub[i]
-    for (start, v.length - 1) fn(i)
-      w[sub.length + i - start] := v[i]
-    w
-  val w = create-w()
+  // w = sub + v[start:]
+  val w = vector-init(
+    sub.length + v.length - start,
+    fn(i) { if i < sub.length then sub[i] else v[i - sub.length + start] }
+  )
   val l = z-algorithm(w)
   fun loop(i: int): exn maybe<int>
     if i + sub.length > v.length then return Nothing
