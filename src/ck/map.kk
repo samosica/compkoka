@@ -120,52 +120,47 @@ pub fun max-binding(m: map<v>): maybe<(int, v)>
     Bra(k, v, _, _, Emp) -> Just((k, v))
     Bra(_, _, _, _, r) -> r.max-binding
 
-// erase-intl(m, key) = (m', deleted, shrinked)
+// erase-intl(m, key) = (m', shrinked)
 //          m' : m から key をなくした木
-//     deleted : key を削除したか (元からなければ False)
 //    shrinked : 高さが 1 減ったか
-fun erase-intl(m: map<v>, key: int): (map<v>, bool, bool)
+fun erase-intl(m: map<v>, key: int): (map<v>, bool)
   match m
-    Emp -> (Emp, False, False)
+    Emp -> (Emp, False)
     Bra(k, v, s, l, r) | key < k ->
-      val (l', deleted, shrinked) = l.erase-intl(key)
+      val (l', shrinked) = l.erase-intl(key)
       val m' = Bra(k, v, s, l', r)
-      if !shrinked then return (m', deleted, False)
+      if !shrinked then return (m', False)
       val (m'', not-shrinked') = m'.adjust-right
-      (m'', deleted, !not-shrinked')
+      (m'', !not-shrinked')
     Bra(k, v, s, l, r) | key > k ->
-      val (r', deleted, shrinked) = r.erase-intl(key)
+      val (r', shrinked) = r.erase-intl(key)
       val m' = Bra(k, v, s, l, r')
-      if !shrinked then return (m', deleted, False)
+      if !shrinked then return (m', False)
       val (m'', not-shrinked') = m'.adjust-left
-      (m'', deleted, !not-shrinked')
+      (m'', !not-shrinked')
     Bra(_, _, s, l, r) ->
       match r.min-binding
         Just((min-k, min-v)) ->
-          val (r', _, shrinked) = r.erase-intl(min-k)
+          val (r', shrinked) = r.erase-intl(min-k)
           val m' = Bra(min-k, min-v, s, l, r')
-          if !shrinked then return (m', True, False)
+          if !shrinked then return (m', False)
           val (m'', not-shrinked') = m'.adjust-left
-          return (m'', True, !not-shrinked')
+          return (m'', !not-shrinked')
         _ -> ()
       match l.max-binding
         Just((max-k, max-v)) ->
-          val (l', _, shrinked) = l.erase-intl(max-k)
+          val (l', shrinked) = l.erase-intl(max-k)
           val m' = Bra(max-k, max-v, s, l', r)
-          if !shrinked then return (m', True, False)
+          if !shrinked then return (m', False)
           val (m'', not-shrinked') = m'.adjust-right
-          return (m'', True, !not-shrinked')
+          return (m'', !not-shrinked')
         _ -> ()
-      (Emp, True, True)
+      (Emp, True)
 
 // Remove a key and the corresponding value from a map.
 // Do nothing if the given key does not exist
 pub fun erase(m: map<v>, key: int): map<v>
   m.erase-intl(key).fst
-
-pub fun erase-with-status(m: map<v>, key: int): (map<v>, bool)
-  val (m', deleted, _) = m.erase-intl(key)
-  (m', deleted)
 
 // Get the value of a specified key
 pub fun get(m: map<v>, key: int): maybe<v>
