@@ -38,7 +38,7 @@ fun tree/show(t: tree<v>, ?show: v -> string): string
 pub fun map/show(m: map<v>, ?show: v -> string): string
   m.tree.show
 
-// Check whether a map is empty
+// Check whether a map is empty.
 pub fun is-empty(m: map<v>): bool
   match m.tree
     Emp -> True
@@ -54,7 +54,8 @@ fun tree/contains(t: tree<v>, key: int): bool
     Bra(k, _, _, l, _) | key < k -> l.contains(key)
     Bra(_, _, _, _, r) -> r.contains(key)
 
-// Check whether a map contains a key
+// Check whether a map contains a key.
+// The time complexity is O(log size).
 pub fun contains(m: map<v>, key: int): bool
   m.tree.contains(key)
 
@@ -119,7 +120,8 @@ fun add-intl(t: tree<v>, key: int, value: v): (tree<v>, bool, bool)
       (t'', grown', added)
 
 // Add a key-value pair to a map.
-// If the given key already exists, update the corresponding value
+// If the given key already exists, update the corresponding value.
+// The time complexity is O(log size).
 pub fun add(m: map<v>, key: int, value: v): map<v>
   val (t, _, added) = m.tree.add-intl(key, value)
   Map(t, if added then m.size + 1 else m.size)
@@ -149,7 +151,8 @@ fun update-intl(t: tree<v>, key: int, f: maybe<v> -> e v): e (tree<v>, bool, boo
 
 // Update the key-value pair of a specified key.
 // If `key` already exists, replace the corresponding value `v` with `f(Just(v))`.
-// Otherwise, add the pair of `key` and `f(Nothing)`
+// Otherwise, add the pair of `key` and `f(Nothing)`.
+// The time complexity is O(log size).
 pub fun update(m: map<v>, key: int, f: maybe<v> -> e v): e map<v>
   val (t, _, added) = m.tree.update-intl(key, f)
   Map(t, if added then m.size + 1 else m.size)
@@ -160,7 +163,8 @@ fun tree/min-binding(t: tree<v>): maybe<(int, v)>
     Bra(k, v, _, Emp, _) -> Just((k, v))
     Bra(_, _, _, l, _) -> l.min-binding
 
-// Return the key-value pair of the smallest key in a map
+// Return the key-value pair of the smallest key in a map.
+// The time complexity is O(log size).
 pub fun min-binding(m: map<v>): maybe<(int, v)>
   m.tree.min-binding
 
@@ -170,7 +174,8 @@ fun tree/max-binding(t: tree<v>): maybe<(int, v)>
     Bra(k, v, _, _, Emp) -> Just((k, v))
     Bra(_, _, _, _, r) -> r.max-binding
 
-// Return the key-value pair of the largest key in a map
+// Return the key-value pair of the largest key in a map.
+// The time complexity is O(log size).
 pub fun max-binding(m: map<v>): maybe<(int, v)>
   m.tree.max-binding
 
@@ -213,7 +218,8 @@ fun remove-intl(t: tree<v>, key: int): (tree<v>, bool, bool)
       (Emp, True, True)
 
 // Remove a key and the corresponding value from a map.
-// Do nothing if the given key does not exist
+// Do nothing if the given key does not exist.
+// The time complexity is O(log size).
 pub fun remove(m: map<v>, key: int): map<v>
   val (t, _, deleted) = m.tree.remove-intl(key)
   Map(t, if deleted then m.size - 1 else m.size)
@@ -225,6 +231,7 @@ fun tree/get(t: tree<v>, key: int): maybe<v>
     Bra(k, _, _, l, _) | key < k -> l.get(key)
     Bra(_, _, _, _, r) -> r.get(key)
 
-// Get the value of a specified key
+// Get the value of a specified key.
+// The time complexity is O(log size).
 pub fun get(m: map<v>, key: int): maybe<v>
   m.tree.get(key)
