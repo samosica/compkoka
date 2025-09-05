@@ -68,7 +68,7 @@ pub fun sort(v: vector<a>, ?(<): (a, a) -> bool): pure vector<a>
 
 // Return a vector whose `k`-th (0-based) element is the length of the longest
 // common prefix of `v` and the suffix starting with `v[k]`.
-pub fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): exn vector<int>
+pub fun z-algorithm(v: vector<a>, ?(==): (a, a) -> bool): exn vector<int>
   val size = v.length
   if size == 0 then return vector(0, 0)
 
@@ -80,7 +80,7 @@ pub fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): exn vector<int>
     var j := 0
     var k := 0
     while { i < size }
-      while { i + j < size && eq(v[j], v[i + j]) }
+      while { i + j < size && v[j] == v[i + j] }
         j := j + 1
       res[i] := j
       if j == 0 then
@@ -96,12 +96,10 @@ pub fun z-algorithm(v: vector<a>, eq: (a, a) -> bool): exn vector<int>
     res
   }
 
-// TODO: test
-fun naive-search(v: vector<a>, sub: vector<a>, start: int, eq: (a, a) -> bool): exn maybe<int>
+fun naive-search(v: vector<a>, sub: vector<a>, start: int, ?(==): (a, a) -> bool): exn maybe<int>
   fun matching(i: int, j: int): exn bool
     if j == sub.length then return True
-    val same = eq(v[i + j], sub[j])
-    if !same then return False
+    if !(v[i + j] == sub[j]) then return False
     matching(i, (j + 1).pretend-decreasing)
   fun loop(i: int): exn maybe<int>
     if i + sub.length > v.length then return Nothing
@@ -113,11 +111,10 @@ fun naive-search(v: vector<a>, sub: vector<a>, start: int, eq: (a, a) -> bool): 
 // Return the position of the first occurrence of `sub` in `v`.
 // The first element is at position 0 (0-based).
 // `start` specifies the starting position to search.
-pub fun search(v: vector<a>, sub: vector<a>, eq: (a, a) -> bool, start: int = 0): <div,exn> maybe<int>
-  // TODO: is div removable?
+pub fun search(v: vector<a>, sub: vector<a>, start: int = 0, ?(==): (a, a) -> bool): <div,exn> maybe<int>
   // TODO: test
   // this optimisation works fine?
-  if sub.length < 16 then return naive-search(v, sub, start, eq)
+  if sub.length < 16 then return naive-search(v, sub, start)
 
   if start < 0 || start + sub.length > v.length then return Nothing
   // Note: inline expansion of `create-w` causes an error like
@@ -131,7 +128,7 @@ pub fun search(v: vector<a>, sub: vector<a>, eq: (a, a) -> bool, start: int = 0)
       w[sub.length + i - start] := v[i]
     w
   val w = create-w()
-  val l = z-algorithm(w, eq)
+  val l = z-algorithm(w)
   fun loop(i: int): exn maybe<int>
     if i + sub.length > v.length then return Nothing
     val found = l[sub.length + i - start] >= sub.length
