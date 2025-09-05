@@ -1,6 +1,6 @@
 /* Input/Output
 
-A sample code using `read`:
+A sample code using this module:
 
 ```
 import ck/io
@@ -9,9 +9,7 @@ fun main()
   val a = read(int)
   val (b, c) = read(int, int)
   val s = read(string)
-  (a + b + c).print
-  " ".print
-  s.println
+  println(a + b + c, s)
 ```
 \/
 */
