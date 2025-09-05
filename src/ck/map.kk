@@ -106,6 +106,32 @@ fun insert-intl(m: map<v>, key: int, value: v): (map<v>, bool)
 pub fun insert(m: map<v>, key: int, value: v): map<v>
   m.insert-intl(key, value).fst
 
+// update-intl(m, key, f) = (m', grown)
+//    m' : key の頂点を更新または追加した m
+// grown : 高さが 1 増えたか
+fun update-intl(m: map<v>, key: int, f: maybe<v> -> e v): e (map<v>, bool)
+  match m
+    Emp ->
+      (Bra(key, f(Nothing), E, Emp, Emp), True) // key を追加
+    Bra(k, v, s, l, r) | key == k ->
+      (Bra(k, f(Just(v)), s, l, r), False) // key がすでに存在するときは値を更新
+    Bra(k, v, s, l, r) | key < k ->
+      val (l', grown) = l.update-intl(key, f)
+      val m' = Bra(k, v, s, l', r)
+      if !grown then return (m', False)
+      m'.adjust-left
+    Bra(k, v, s, l, r) ->
+      val (r', grown) = r.update-intl(key, f)
+      val m' = Bra(k, v, s, l, r')
+      if !grown then return (m', False)
+      m'.adjust-right
+
+// Update the key-value pair of a specified key.
+// If `key` already exists, replace the corresponding value `v` with `f(Just(v))`.
+// Otherwise, add the pair of `key` and `f(Nothing)`
+pub fun update(m: map<v>, key: int, f: maybe<v> -> e v): e map<v>
+  m.update-intl(key, f).fst
+
 // Return the key-value pair of the smallest key in a map
 pub fun min-binding(m: map<v>): maybe<(int, v)>
   match m
@@ -169,18 +195,3 @@ pub fun get(m: map<v>, key: int): maybe<v>
     Bra(k, v, _, _, _) | key == k -> Just(v)
     Bra(k, _, _, l, _) | key < k -> l.get(key)
     Bra(_, _, _, _, r) -> r.get(key)
-
-// Update the value of a specified key.
-// Do nothing if the key does not exist
-pub fun update(m: map<v>, key: int, f: v -> e v): e map<v>
-  match m
-    Emp -> Emp
-    Bra(k, v, s, l, r) | key == k -> Bra(k, f(v), s, l, r)
-    Bra(k, v, s, l, r) | key < k -> Bra(k, v, s, l.update(key, f), r)
-    Bra(k, v, s, l, r) -> Bra(k, v, s, l, r.update(key, f))
-
-pub fun update-or-insert(m: map<v>, key: int, f: v -> e v, value: v): e map<v>
-  if m.get(key).is-just then
-    m.update(key, f)
-  else
-    m.insert(key, value)
