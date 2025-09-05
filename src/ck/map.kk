@@ -34,8 +34,7 @@ pub fun is-empty(t: map<b>): bool
     _ -> False
 
 // Create an empty map.
-pub fun empty(): map<b>
-  Emp
+pub val empty: forall<b> map<b> = Emp
 
 // 左の部分木が 2 だけ高くなっていたら修正する
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
