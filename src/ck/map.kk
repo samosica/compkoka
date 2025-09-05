@@ -96,23 +96,23 @@ fun adjust-right(t: tree<v>): (tree<v>, bool)
       (Bra(c, z, E, Bra(a, x, L, l, l''), Bra(b, y, E, r'', r')), False)
     _ -> (t, False) // for exhaustive check
 
-// insert-intl(t, key, value) = (t', grown, added)
+// add-intl(t, key, value) = (t', grown, added)
 //    t' : t に (key, value) を挿入して得られる木
 // grown : 高さが 1 増えたか
 // added : key が追加されたか
-fun insert-intl(t: tree<v>, key: int, value: v): (tree<v>, bool, bool)
+fun add-intl(t: tree<v>, key: int, value: v): (tree<v>, bool, bool)
   match t
     Emp -> (Bra(key, value, E, Emp, Emp), True, True)
     Bra(k, _, s, l, r) | key == k ->
       (Bra(k, value, s, l, r), False, False) // key がすでに存在するときは値を更新する
     Bra(k, v, s, l, r) | key < k ->
-      val (l', grown, added) = l.insert-intl(key, value)
+      val (l', grown, added) = l.add-intl(key, value)
       val t' = Bra(k, v, s, l', r)
       if !grown then return (t', False, added)
       val (t'', grown') = t'.adjust-left
       (t'', grown', added)
     Bra(k, v, s, l, r) ->
-      val (r', grown, added) = r.insert-intl(key, value)
+      val (r', grown, added) = r.add-intl(key, value)
       val t' = Bra(k, v, s, l, r')
       if !grown then return (t', False, added)
       val (t'', grown') = t'.adjust-right
@@ -120,8 +120,8 @@ fun insert-intl(t: tree<v>, key: int, value: v): (tree<v>, bool, bool)
 
 // Add a key-value pair to a map.
 // If the given key already exists, update the corresponding value
-pub fun insert(m: map<v>, key: int, value: v): map<v>
-  val (t, _, added) = m.tree.insert-intl(key, value)
+pub fun add(m: map<v>, key: int, value: v): map<v>
+  val (t, _, added) = m.tree.add-intl(key, value)
   Map(t, if added then m.size + 1 else m.size)
 
 // update-intl(m, key, f) = (m', grown)
