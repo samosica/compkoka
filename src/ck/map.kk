@@ -1,19 +1,22 @@
-/* Map
-
-Keys are integers and values may have an arbitrary type.
-*/
+// Map
 module ck/map
-
-// TODO: write test
 
 type skewness
   L
   E
   R
 
-abstract type map<b>
+abstract type tree<k,v>
   Emp
-  Bra{ key: int; value: b; skew: skewness; left: map<b>; right: map<b> }
+  Bra{ key: k; value: v; skew: skewness; left: tree<k,v>; right: tree<k,v> }
+
+// Note: `map<v>` stores the number of key-value pairs, `size`, in order to
+// compute it in constant time, not in logarithmic time.
+
+value struct map<k,v>
+  tree: tree<k,v>
+  // The number of key-value pairs
+  pub size: int
 
 fun skewness/show(s: skewness): string
   match s
@@ -21,27 +24,43 @@ fun skewness/show(s: skewness): string
     E -> "E"
     R -> "R"
 
-pub fun map/show(t: map<b>, ?show: b -> string): string
+fun tree/show(t: tree<k,v>, ?k/show: k -> string, ?v/show: v -> string): string
   match t
     Emp -> "Emp"
     Bra(k, v, s, l, r) ->
       "Bra(" ++ k.show ++ ", " ++ v.show ++ ", " ++ s.show ++ ", " ++ l.show ++ ", " ++ r.show ++ ")"
 
-// Check whether a map is empty
-pub fun is-empty(t: map<b>): bool
-  match t
+pub fun map/show(m: map<k,v>, ?k/show: k -> string, ?v/show: v -> string): string
+  m.tree.show
+
+// Check whether a map is empty.
+pub fun is-empty(m: map<k,v>): bool
+  match m.tree
     Emp -> True
     _ -> False
 
 // Create an empty map.
-pub fun empty(): map<b>
-  Emp
+pub val empty: forall<k,v> map<k,v> = Map(Emp, 0)
+
+fun tree/contains(t: tree<k,v>, key: k, ?cmp: (k, k) -> order): bool
+  match t
+    Emp -> False
+    Bra(k, _, _, _, _) | key == k -> True
+    Bra(k, _, _, l, _) | key < k -> l.contains(key)
+    Bra(_, _, _, _, r) -> r.contains(key)
+
+// Check whether a map contains a key.
+// The time complexity is O(log size).
+pub fun contains(m: map<k,v>, key: k, ?cmp: (k, k) -> order): bool
+  m.tree.contains(key)
 
 // 左の部分木が 2 だけ高くなっていたら修正する
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
 // 要素の削除の場合、「右」の部分木から削除したときであり、逆になるので注意が必要
 // 2番目の戻り値が True のとき、修正前後で木の高さは変わらない
-fun adjust-l(t: map<b>): (map<b>, bool)
+fun adjust-left(t: tree<k,v>): (tree<k,v>, bool)
+  // a, b, c: keys
+  // x, y, z: values
   match t
     Bra(a, x, E, l, r) -> (Bra(a, x, L, l, r), True)
     Bra(a, x, R, l, r) -> (Bra(a, x, E, l, r), False)
@@ -57,7 +76,7 @@ fun adjust-l(t: map<b>): (map<b>, bool)
       (Bra(c, z, E, Bra(b, y, L, l', l''), Bra(a, x, E, r'', r)), False)
     _ -> (t, False) // for exhaustive check
 
-fun adjust-r(t: map<b>): (map<b>, bool)
+fun adjust-right(t: tree<k,v>): (tree<k,v>, bool)
   match t
     Bra(a, x, L, l, r) -> (Bra(a, x, E, l, r), False)
     Bra(a, x, E, l, r) -> (Bra(a, x, R, l, r), True)
@@ -73,110 +92,165 @@ fun adjust-r(t: map<b>): (map<b>, bool)
       (Bra(c, z, E, Bra(a, x, L, l, l''), Bra(b, y, E, r'', r')), False)
     _ -> (t, False) // for exhaustive check
 
-// insert-intl(t, k, v) = (t', grown)
-//    t' : t に (k, v) を挿入して得られる木
+// add-intl(t, key, value) = (t', grown, added)
+//    t' : t に (key, value) を挿入して得られる木
 // grown : 高さが 1 増えたか
-fun insert-intl(t: map<b>, k: int, v: b): (map<b>, bool)
+// added : key が追加されたか
+fun add-intl(t: tree<k,v>, key: k, value: v, ?cmp: (k, k) -> order): (tree<k,v>, bool, bool)
   match t
-    Emp -> (Bra(k, v, E, Emp, Emp), True)
-    Bra(a, _, s, l, r) | k == a ->
-      (Bra(a, v, s, l, r), False) // k がすでに存在するときは値を更新する
-    Bra(a, x, s, l, r) | k < a ->
-      val (l', grown) = l.insert-intl(k, v)
-      val t' = Bra(a, x, s, l', r)
-      if !grown then return (t', False)
-      t'.adjust-l
-    Bra(a, x, s, l, r) ->
-      val (r', grown) = r.insert-intl(k, v)
-      val t' = Bra(a, x, s, l, r')
-      if !grown then return (t', False)
-      t'.adjust-r
+    Emp -> (Bra(key, value, E, Emp, Emp), True, True)
+    Bra(k, _, s, l, r) | key == k ->
+      (Bra(k, value, s, l, r), False, False) // key がすでに存在するときは値を更新する
+    Bra(k, v, s, l, r) | key < k ->
+      val (l', grown, added) = l.add-intl(key, value)
+      val t' = Bra(k, v, s, l', r)
+      if !grown then return (t', False, added)
+      val (t'', grown') = t'.adjust-left
+      (t'', grown', added)
+    Bra(k, v, s, l, r) ->
+      val (r', grown, added) = r.add-intl(key, value)
+      val t' = Bra(k, v, s, l, r')
+      if !grown then return (t', False, added)
+      val (t'', grown') = t'.adjust-right
+      (t'', grown', added)
 
 // Add a key-value pair to a map.
-// If the given key already exists, update the corresponding value
-pub fun insert(t: map<b>, k: int, v: b): map<b>
-  t.insert-intl(k, v).fst
+// If the given key already exists, update the corresponding value.
+// The time complexity is O(log size).
+pub fun add(m: map<k,v>, key: k, value: v, ?cmp: (k, k) -> order): map<k,v>
+  val (t, _, added) = m.tree.add-intl(key, value)
+  Map(t, if added then m.size + 1 else m.size)
 
-// Return the key-value pair of the smallest key in a map
-pub fun min-binding(t: map<b>): maybe<(int, b)>
+// update-intl(m, key, f) = (m', grown)
+//    m' : key の頂点を更新または追加した m
+// grown : 高さが 1 増えたか
+// added : key が追加されたか
+fun update-intl(t: tree<k,v>, key: k, f: maybe<v> -> e v, ?cmp: (k, k) -> order): e (tree<k,v>, bool, bool)
+  match t
+    Emp ->
+      (Bra(key, f(Nothing), E, Emp, Emp), True, True) // key を追加
+    Bra(k, v, s, l, r) | key == k ->
+      (Bra(k, f(Just(v)), s, l, r), False, False) // key がすでに存在するときは値を更新
+    Bra(k, v, s, l, r) | key < k ->
+      val (l', grown, added) = l.update-intl(key, f)
+      val t' = Bra(k, v, s, l', r)
+      if !grown then return (t', False, added)
+      val (t'', grown') = t'.adjust-left
+      (t'', grown', added)
+    Bra(k, v, s, l, r) ->
+      val (r', grown, added) = r.update-intl(key, f)
+      val t' = Bra(k, v, s, l, r')
+      if !grown then return (t', False, added)
+      val (t'', grown') = t'.adjust-right
+      (t'', grown', added)
+
+// Update the key-value pair of a specified key.
+// If `key` already exists, replace the corresponding value `v` with `f(Just(v))`.
+// Otherwise, add the pair of `key` and `f(Nothing)`.
+// The time complexity is O(log size).
+pub fun update(m: map<k,v>, key: k, f: maybe<v> -> e v, ?cmp: (k, k) -> order): e map<k,v>
+  val (t, _, added) = m.tree.update-intl(key, f)
+  Map(t, if added then m.size + 1 else m.size)
+
+fun tree/min-binding(t: tree<k,v>): maybe<(k, v)>
   match t
     Emp -> Nothing
-    Bra(a, x, _, Emp, _) -> Just((a, x))
+    Bra(k, v, _, Emp, _) -> Just((k, v))
     Bra(_, _, _, l, _) -> l.min-binding
 
-// Return the key-value pair of the largest key in a map
-pub fun max-binding(t: map<b>): maybe<(int, b)>
+// Return the key-value pair of the smallest key in a map.
+// The time complexity is O(log size).
+pub fun min-binding(m: map<k,v>): maybe<(k, v)>
+  m.tree.min-binding
+
+fun tree/max-binding(t: tree<k,v>): maybe<(k, v)>
   match t
     Emp -> Nothing
-    Bra(a, x, _, _, Emp) -> Just((a, x))
+    Bra(k, v, _, _, Emp) -> Just((k, v))
     Bra(_, _, _, _, r) -> r.max-binding
 
-// erase-intl(t, k) = (t', deleted, shrinked)
-//          t' : t から k をなくした木
-//     deleted : k を削除したか (元からなければ False)
+// Return the key-value pair of the largest key in a map.
+// The time complexity is O(log size).
+pub fun max-binding(m: map<k,v>): maybe<(k, v)>
+  m.tree.max-binding
+
+// remove-intl(t, key) = (t', shrinked, deleted)
+//          t' : t から key をなくした木
 //    shrinked : 高さが 1 減ったか
-fun erase-intl(t: map<b>, k: int): (map<b>, bool, bool)
+//     deleted : key を削除したか (元からなければ False)
+fun remove-intl(t: tree<k,v>, key: k, ?cmp: (k, k) -> order): (tree<k,v>, bool, bool)
   match t
     Emp -> (Emp, False, False)
-    Bra(a, x, s, l, r) | k < a ->
-      val (l', deleted, shrinked) = l.erase-intl(k)
-      val t' = Bra(a, x, s, l', r)
-      if !shrinked then return (t', deleted, False)
-      val (t'', not-shrinked') = t'.adjust-r
-      (t'', deleted, !not-shrinked')
-    Bra(a, x, s, l, r) | k > a ->
-      val (r', deleted, shrinked) = r.erase-intl(k)
-      val t' = Bra(a, x, s, l, r')
-      if !shrinked then return (t', deleted, False)
-      val (t'', not-shrinked') = t'.adjust-l
-      (t'', deleted, !not-shrinked')
+    Bra(k, v, s, l, r) | key < k ->
+      val (l', shrinked, deleted) = l.remove-intl(key)
+      val m' = Bra(k, v, s, l', r)
+      if !shrinked then return (m', False, deleted)
+      val (m'', not-shrinked') = m'.adjust-right
+      (m'', !not-shrinked', deleted)
+    Bra(k, v, s, l, r) | key > k ->
+      val (r', shrinked, deleted) = r.remove-intl(key)
+      val m' = Bra(k, v, s, l, r')
+      if !shrinked then return (m', False, deleted)
+      val (m'', not-shrinked') = m'.adjust-left
+      (m'', !not-shrinked', deleted)
     Bra(_, _, s, l, r) ->
       match r.min-binding
-        Just((mnk, mnv)) ->
-          val (r', _, shrinked) = r.erase-intl(mnk)
-          val t' = Bra(mnk, mnv, s, l, r')
-          if !shrinked then return (t', True, False)
-          val (t'', not-shrinked') = t'.adjust-l
-          return (t'', True, !not-shrinked')
+        Just((min-k, min-v)) ->
+          val (r', shrinked, _) = r.remove-intl(min-k)
+          val m' = Bra(min-k, min-v, s, l, r')
+          if !shrinked then return (m', False, True)
+          val (m'', not-shrinked') = m'.adjust-left
+          return (m'', !not-shrinked', True)
         _ -> ()
       match l.max-binding
-        Just((mxk, mxv)) ->
-          val (l', _, shrinked) = l.erase-intl(mxk)
-          val t' = Bra(mxk, mxv, s, l', r)
-          if !shrinked then return (t', True, False)
-          val (t'', not-shrinked') = t'.adjust-r
-          return (t'', True, !not-shrinked')
+        Just((max-k, max-v)) ->
+          val (l', shrinked, _) = l.remove-intl(max-k)
+          val m' = Bra(max-k, max-v, s, l', r)
+          if !shrinked then return (m', False, True)
+          val (m'', not-shrinked') = m'.adjust-right
+          return (m'', !not-shrinked', True)
         _ -> ()
       (Emp, True, True)
 
 // Remove a key and the corresponding value from a map.
-// Do nothing if the given key does not exist
-pub fun erase(t: map<b>, k: int): map<b>
-  t.erase-intl(k).fst
+// Do nothing if the given key does not exist.
+// The time complexity is O(log size).
+pub fun remove(m: map<k,v>, key: k, ?cmp: (k, k) -> order): map<k,v>
+  val (t, _, deleted) = m.tree.remove-intl(key)
+  Map(t, if deleted then m.size - 1 else m.size)
 
-pub fun erase-with-status(t: map<b>, k: int): (map<b>, bool)
-  val (t', deleted, _) = t.erase-intl(k)
-  (t', deleted)
-
-// Get the value of a specified key
-pub fun get(t: map<b>, k: int): maybe<b>
+fun tree/get(t: tree<k,v>, key: k, ?cmp: (k, k) -> order): maybe<v>
   match t
     Emp -> Nothing
-    Bra(a, x, _, _, _) | k == a -> Just(x)
-    Bra(a, _, _, l, _) | k < a -> l.get(k)
-    Bra(_, _, _, _, r) -> r.get(k)
+    Bra(k, v, _, _, _) | key == k -> Just(v)
+    Bra(k, _, _, l, _) | key < k -> l.get(key)
+    Bra(_, _, _, _, r) -> r.get(key)
 
-// Update the value of a specified key.
-// Do nothing if the key does not exist
-pub fun update(t: map<b>, k: int, f: b -> e b): e map<b>
+// Get the value of a specified key.
+// The time complexity is O(log size).
+pub fun get(m: map<k,v>, key: k, ?cmp: (k, k) -> order): maybe<v>
+  m.tree.get(key)
+
+pub fun tree/foreach(t: tree<k,v>, action: (k, v) -> e ()): e()
   match t
-    Emp -> Emp
-    Bra(a, x, s, l, r) | k == a -> Bra(a, f(x), s, l, r)
-    Bra(a, x, s, l, r) | k < a -> Bra(a, x, s, l.update(k, f), r)
-    Bra(a, x, s, l, r) -> Bra(a, x, s, l, r.update(k, f))
+    Emp -> ()
+    Bra(k, v, _, l, r) ->
+      l.foreach(action)
+      action(k, v)
+      r.foreach(action)
 
-pub fun update-or-insert(t: map<b>, k: int, f: b -> e b, v: b): e map<b>
-  if t.get(k).is-just then
-    t.update(k, f)
-  else
-    t.insert(k, v)
+// Iterate over key-value pairs in ascending order of their keys
+pub fun foreach(m: map<k,v>, action: (k, v) -> e ()): e()
+  m.tree.foreach(action)
+
+pub fun tree/foreach-key(t: tree<k,v>, action: k -> e ()): e()
+  match t
+    Emp -> ()
+    Bra(k, _, _, l, r) ->
+      l.foreach-key(action)
+      action(k)
+      r.foreach-key(action)
+
+// Iterate over keys in ascending order
+pub fun foreach-key(m: map<k,v>, action: k -> e ()): e()
+  m.tree.foreach-key(action)
