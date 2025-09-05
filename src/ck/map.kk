@@ -174,21 +174,21 @@ fun tree/max-binding(t: tree<v>): maybe<(int, v)>
 pub fun max-binding(m: map<v>): maybe<(int, v)>
   m.tree.max-binding
 
-// erase-intl(t, key) = (t', shrinked, deleted)
+// remove-intl(t, key) = (t', shrinked, deleted)
 //          t' : t から key をなくした木
 //    shrinked : 高さが 1 減ったか
 //     deleted : key を削除したか (元からなければ False)
-fun erase-intl(t: tree<v>, key: int): (tree<v>, bool, bool)
+fun remove-intl(t: tree<v>, key: int): (tree<v>, bool, bool)
   match t
     Emp -> (Emp, False, False)
     Bra(k, v, s, l, r) | key < k ->
-      val (l', shrinked, deleted) = l.erase-intl(key)
+      val (l', shrinked, deleted) = l.remove-intl(key)
       val m' = Bra(k, v, s, l', r)
       if !shrinked then return (m', False, deleted)
       val (m'', not-shrinked') = m'.adjust-right
       (m'', !not-shrinked', deleted)
     Bra(k, v, s, l, r) | key > k ->
-      val (r', shrinked, deleted) = r.erase-intl(key)
+      val (r', shrinked, deleted) = r.remove-intl(key)
       val m' = Bra(k, v, s, l, r')
       if !shrinked then return (m', False, deleted)
       val (m'', not-shrinked') = m'.adjust-left
@@ -196,7 +196,7 @@ fun erase-intl(t: tree<v>, key: int): (tree<v>, bool, bool)
     Bra(_, _, s, l, r) ->
       match r.min-binding
         Just((min-k, min-v)) ->
-          val (r', shrinked, _) = r.erase-intl(min-k)
+          val (r', shrinked, _) = r.remove-intl(min-k)
           val m' = Bra(min-k, min-v, s, l, r')
           if !shrinked then return (m', False, True)
           val (m'', not-shrinked') = m'.adjust-left
@@ -204,7 +204,7 @@ fun erase-intl(t: tree<v>, key: int): (tree<v>, bool, bool)
         _ -> ()
       match l.max-binding
         Just((max-k, max-v)) ->
-          val (l', shrinked, _) = l.erase-intl(max-k)
+          val (l', shrinked, _) = l.remove-intl(max-k)
           val m' = Bra(max-k, max-v, s, l', r)
           if !shrinked then return (m', False, True)
           val (m'', not-shrinked') = m'.adjust-right
@@ -214,8 +214,8 @@ fun erase-intl(t: tree<v>, key: int): (tree<v>, bool, bool)
 
 // Remove a key and the corresponding value from a map.
 // Do nothing if the given key does not exist
-pub fun erase(m: map<v>, key: int): map<v>
-  val (t, _, deleted) = m.tree.erase-intl(key)
+pub fun remove(m: map<v>, key: int): map<v>
+  val (t, _, deleted) = m.tree.remove-intl(key)
   Map(t, if deleted then m.size - 1 else m.size)
 
 fun tree/get(t: tree<v>, key: int): maybe<v>
