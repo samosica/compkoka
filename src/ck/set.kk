@@ -1,4 +1,4 @@
-// Integer set
+// Set
 module ck/set
 
 type skewness
@@ -6,11 +6,21 @@ type skewness
   E
   R
 
-// Sets of integers.
-// Duplicates are omitted
-abstract type set
+type tree<a>
   Emp
-  Bra{ value: int; skew: skewness; left: set; right: set }
+  Bra{ value: a; skew: skewness; left: tree<a>; right: tree<a> }
+
+// Note: `set<a>` stores the number of key-value pairs, `size'`, in order to
+// compute it in constant time, not in logarithmic time.
+
+abstract value struct set<a>
+  tree: tree<a>
+  size': int
+
+// Return the number of key-value pairs.
+// The time complexity is O(1).
+pub fun size(s: set<a>): int
+  s.size'
 
 fun skewness/show(s: skewness): string
   match s
@@ -18,39 +28,45 @@ fun skewness/show(s: skewness): string
     E -> "E"
     R -> "R"
 
-pub fun set/show(t: set): string
+fun tree/show(t: tree<a>, ?show: a -> string): string
   match t
     Emp -> "Emp"
     Bra(v, s, l, r) ->
       "Bra(" ++ v.show ++ ", " ++ s.show ++ ", " ++ l.show ++ ", " ++ r.show ++ ")"
 
+pub fun set/show(s: set<a>, ?show: a -> string): string
+  s.tree.show
+
 // Check whether a set is empty
-pub fun is-empty(t: set): bool
-  match t
+pub fun is-empty(s: set<a>): bool
+  match s.tree
     Emp -> True
     _ -> False
 
 // Create an empty set
-pub fun empty(): set
-  Emp
+pub val empty: forall<a> set<a> = Set(Emp, 0)
 
 // Create a set with a single element
-pub fun singleton(v: int)
-  Bra( value = v, skew = E, left = Emp, right = Emp )
+pub fun singleton(v: a): set<a>
+  Set(Bra( value = v, skew = E, left = Emp, right = Emp ), 1)
 
-// Check whether a value belongs to a set
-pub fun mem(t: set, v: int): bool
+fun tree/contains(t: tree<a>, value: a, ?cmp: (a, a) -> order): bool
   match t
     Emp -> False
-    Bra(a, _, _, _) | v == a -> True
-    Bra(a, _, l, _) | v < a -> l.mem(v)
-    Bra(_, _, _, r) -> r.mem(v)
+    Bra(v, _, _, _) | value == v -> True
+    Bra(v, _, l, _) | value < v -> l.contains(value)
+    Bra(_, _, _, r) -> r.contains(value)
+
+// Check whether a value belongs to a set.
+// The time complexity is O(log size).
+pub fun contains(s: set<a>, value: a, ?cmp: (a, a) -> order): bool
+  s.tree.contains(value)
 
 // 左の部分木が 2 だけ高くなっていたら修正する
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
 // 要素の削除の場合、「右」の部分木から削除したときであり、逆になるので注意が必要
 // 2番目の戻り値が True のとき、修正前後で木の高さは変わらない
-fun adjust-l(t: set): (set, bool)
+fun adjust-left(t: tree<a>): (tree<a>, bool)
   match t
     Bra(a, E, l, r) -> (Bra(a, L, l, r), True)
     Bra(a, R, l, r) -> (Bra(a, E, l, r), False)
@@ -66,7 +82,7 @@ fun adjust-l(t: set): (set, bool)
       (Bra(c, E, Bra(b, L, l', l''), Bra(a, E, r'', r)), False)
     _ -> (t, False) // for exhaustive check
 
-fun adjust-r(t: set): (set, bool)
+fun adjust-right(t: tree<a>): (tree<a>, bool)
   match t
     Bra(a, L, l, r) -> (Bra(a, E, l, r), False)
     Bra(a, E, l, r) -> (Bra(a, R, l, r), True)
@@ -82,95 +98,109 @@ fun adjust-r(t: set): (set, bool)
       (Bra(c, E, Bra(a, L, l, l''), Bra(b, E, r'', r')), False)
     _ -> (t, False) // for exhaustive check
 
-// insert-intl(t, v) = (t', grown)
+// add-intl(t, v) = (t', grown, added)
 //    t' : t に v を挿入して得られる木
 // grown : 高さが 1 増えたか
-fun insert-intl(t: set, v: int): (set, bool)
+// added : key が追加されたか
+fun add-intl(t: tree<a>, value: a, ?cmp: (a, a) -> order): (tree<a>, bool, bool)
   match t
-    Emp -> (singleton(v), True)
-    Bra(a, _, _, _) | v == a -> (t, False) // v がすでに存在するときは追加しない
-    Bra(a, s, l, r) | v < a ->
-      val (l', grown) = l.insert-intl(v)
-      val t' = Bra(a, s, l', r)
-      if !grown then return (t', False)
-      t'.adjust-l
-    Bra(a, s, l, r) ->
-      val (r', grown) = r.insert-intl(v)
-      val t' = Bra(a, s, l, r')
-      if !grown then return (t', False)
-      t'.adjust-r
+    Emp -> (Bra( value = value, skew = E, left = Emp, right = Emp ), True, True)
+    Bra(v, _, _, _) | value == v -> (t, False, False) // v がすでに存在するときは追加しない
+    Bra(v, s, l, r) | value < v ->
+      val (l', grown, added) = l.add-intl(value)
+      val t' = Bra(v, s, l', r)
+      if !grown then return (t', False, added)
+      val (t'', grown') = t'.adjust-left
+      (t'', grown', added)
+    Bra(v, s, l, r) ->
+      val (r', grown, added) = r.add-intl(value)
+      val t' = Bra(v, s, l, r')
+      if !grown then return (t', False, added)
+      val (t'', grown') = t'.adjust-right
+      (t'', grown', added)
 
 // Add a value to a set.
-// Do nothing if the given value already exists
-pub fun insert(t: set, v: int): set
-  t.insert-intl(v).fst
+// Do nothing if the given value already exists.
+// The time complexity is O(log size).
+pub fun add(s: set<a>, value: a, ?cmp: (a, a) -> order): set<a>
+  val (t, _, added) = s.tree.add-intl(value)
+  Set(t, if added then s.size + 1 else s.size)
 
-// Return the minimum element of a set
-pub fun min(t: set): maybe<int>
+fun tree/min(t: tree<a>): maybe<a>
   match t
     Emp -> Nothing
-    Bra(a, _, Emp, _) -> Just(a)
+    Bra(v, _, Emp, _) -> Just(v)
     Bra(_, _, l, _) -> l.min
 
-// Return the maximum element of a set
-pub fun max(t: set): maybe<int>
+// Return the minimum element of a set.
+// The time complexity is O(log size).
+pub fun min(s: set<a>): maybe<a>
+  s.tree.min
+
+fun tree/max(t: tree<a>): maybe<a>
   match t
     Emp -> Nothing
-    Bra(a, _, _, Emp) -> Just(a)
+    Bra(v, _, _, Emp) -> Just(v)
     Bra(_, _, _, r) -> r.max
 
-// erase-intl(t, v) = (t', deleted, shrinked)
+// Return the maximum element of a set.
+// The time complexity is O(log size).
+pub fun max(s: set<a>): maybe<a>
+  s.tree.max
+
+// remove-intl(t, v) = (t', shrinked, deleted)
 //          t' : t から v をなくした木
-//     deleted : v を削除したか (元からなければ false)
 //    shrinked : 高さが 1 減ったか
-fun erase-intl(t: set, v: int): (set, bool, bool)
+//     deleted : v を削除したか (元からなければ false)
+fun remove-intl(t: tree<a>, value: a, ?cmp: (a, a) -> order): (tree<a>, bool, bool)
   match t
     Emp -> (Emp, False, False)
-    Bra(a, s, l, r) | v < a ->
-      val (l', deleted, shrinked) = l.erase-intl(v)
-      val t' = Bra(a, s, l', r)
-      if !shrinked then return (t', deleted, False)
-      val (t'', not-shrinked') = t'.adjust-r
-      (t'', deleted, !not-shrinked')
-    Bra(a, s, l, r) | v > a ->
-      val (r', deleted, shrinked) = r.erase-intl(v)
-      val t' = Bra(a, s, l, r')
-      if !shrinked then return (t', deleted, False)
-      val (t'', not-shrinked') = t'.adjust-l
-      (t'', deleted, !not-shrinked')
+    Bra(v, s, l, r) | value < v ->
+      val (l', shrinked, deleted) = l.remove-intl(value)
+      val t' = Bra(v, s, l', r)
+      if !shrinked then return (t', False, deleted)
+      val (t'', not-shrinked') = t'.adjust-right
+      (t'', !not-shrinked', deleted)
+    Bra(v, s, l, r) | value > v ->
+      val (r', shrinked, deleted) = r.remove-intl(value)
+      val t' = Bra(v, s, l, r')
+      if !shrinked then return (t', False, deleted)
+      val (t'', not-shrinked') = t'.adjust-left
+      (t'', !not-shrinked', deleted)
     Bra(_, s, l, r) ->
       match r.min
-        Just(mn) ->
-          val (r', _, shrinked) = r.erase-intl(mn)
-          val t' = Bra(mn, s, l, r')
-          if !shrinked then return (t', True, False)
-          val (t'', not-shrinked') = t'.adjust-l
-          return (t'', True, !not-shrinked')
+        Just(min-v) ->
+          val (r', shrinked, _) = r.remove-intl(min-v)
+          val t' = Bra(min-v, s, l, r')
+          if !shrinked then return (t', False, True)
+          val (t'', not-shrinked') = t'.adjust-left
+          return (t'', !not-shrinked', True)
         _ -> ()
       match l.max
-        Just(mx) ->
-          val (l', _, shrinked) = l.erase-intl(mx)
-          val t' = Bra(mx, s, l', r)
-          if !shrinked then return (t', True, False)
-          val (t'', not-shrinked') = t'.adjust-r
-          return (t'', True, !not-shrinked')
+        Just(max-v) ->
+          val (l', shrinked, _) = l.remove-intl(max-v)
+          val t' = Bra(max-v, s, l', r)
+          if !shrinked then return (t', False, True)
+          val (t'', not-shrinked') = t'.adjust-right
+          return (t'', !not-shrinked', True)
         _ -> ()
       (Emp, True, True)
 
 // Remove an element from a set.
-// Do nothing if the given value does not exist
-pub fun erase(t: set, v: int): set
-  t.erase-intl(v).fst
+// Do nothing if the given value does not exist.
+// The time complexity is O(log size).
+pub fun remove(s: set<a>, value: a, ?cmp: (a, a) -> order): set<a>
+  val (t, _, deleted) = s.tree.remove-intl(value)
+  Set(t, if deleted then s.size - 1 else s.size)
 
-pub fun erase-with-status(t: set, v: int): (set, bool)
-  val (t', deleted, _) = t.erase-intl(v)
-  (t', deleted)
-
-// Iterate over elements in ascending order
-pub fun foreach(t: set, action: int -> e ()): e ()
+fun tree/foreach(t: tree<a>, action: a -> e ()): e ()
   match t
     Emp -> ()
     Bra(v, _, l, r) ->
       foreach(l, action)
       action(v)
       foreach(r, action)
+
+// Iterate over elements in ascending order
+pub fun foreach(s: set<a>, action: a -> e ()): e ()
+  s.tree.foreach(action)

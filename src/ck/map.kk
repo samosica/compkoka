@@ -10,7 +10,7 @@ type tree<k,v>
   Emp
   Bra{ key: k; value: v; skew: skewness; left: tree<k,v>; right: tree<k,v> }
 
-// Note: `map<v>` stores the number of key-value pairs, `size'`, in order to
+// Note: `map<k,v>` stores the number of key-value pairs, `size'`, in order to
 // compute it in constant time, not in logarithmic time.
 
 abstract value struct map<k,v>
