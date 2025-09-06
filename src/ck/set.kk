@@ -119,21 +119,21 @@ pub fun max(t: set): maybe<int>
     Bra(a, _, _, Emp) -> Just(a)
     Bra(_, _, _, r) -> r.max
 
-// erase-intl(t, v) = (t', deleted, shrinked)
+// remove-intl(t, v) = (t', deleted, shrinked)
 //          t' : t から v をなくした木
 //     deleted : v を削除したか (元からなければ false)
 //    shrinked : 高さが 1 減ったか
-fun erase-intl(t: set, v: int): (set, bool, bool)
+fun remove-intl(t: set, v: int): (set, bool, bool)
   match t
     Emp -> (Emp, False, False)
     Bra(a, s, l, r) | v < a ->
-      val (l', deleted, shrinked) = l.erase-intl(v)
+      val (l', deleted, shrinked) = l.remove-intl(v)
       val t' = Bra(a, s, l', r)
       if !shrinked then return (t', deleted, False)
       val (t'', not-shrinked') = t'.adjust-r
       (t'', deleted, !not-shrinked')
     Bra(a, s, l, r) | v > a ->
-      val (r', deleted, shrinked) = r.erase-intl(v)
+      val (r', deleted, shrinked) = r.remove-intl(v)
       val t' = Bra(a, s, l, r')
       if !shrinked then return (t', deleted, False)
       val (t'', not-shrinked') = t'.adjust-l
@@ -141,7 +141,7 @@ fun erase-intl(t: set, v: int): (set, bool, bool)
     Bra(_, s, l, r) ->
       match r.min
         Just(mn) ->
-          val (r', _, shrinked) = r.erase-intl(mn)
+          val (r', _, shrinked) = r.remove-intl(mn)
           val t' = Bra(mn, s, l, r')
           if !shrinked then return (t', True, False)
           val (t'', not-shrinked') = t'.adjust-l
@@ -149,7 +149,7 @@ fun erase-intl(t: set, v: int): (set, bool, bool)
         _ -> ()
       match l.max
         Just(mx) ->
-          val (l', _, shrinked) = l.erase-intl(mx)
+          val (l', _, shrinked) = l.remove-intl(mx)
           val t' = Bra(mx, s, l', r)
           if !shrinked then return (t', True, False)
           val (t'', not-shrinked') = t'.adjust-r
@@ -159,8 +159,8 @@ fun erase-intl(t: set, v: int): (set, bool, bool)
 
 // Remove an element from a set.
 // Do nothing if the given value does not exist
-pub fun erase(t: set, v: int): set
-  t.erase-intl(v).fst
+pub fun remove(t: set, v: int): set
+  t.remove-intl(v).fst
 
 // Iterate over elements in ascending order
 pub fun foreach(t: set, action: int -> e ()): e ()
