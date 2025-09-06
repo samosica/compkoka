@@ -162,10 +162,6 @@ fun erase-intl(t: set, v: int): (set, bool, bool)
 pub fun erase(t: set, v: int): set
   t.erase-intl(v).fst
 
-pub fun erase-with-status(t: set, v: int): (set, bool)
-  val (t', deleted, _) = t.erase-intl(v)
-  (t', deleted)
-
 // Iterate over elements in ascending order
 pub fun foreach(t: set, action: int -> e ()): e ()
   match t
