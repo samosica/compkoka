@@ -57,7 +57,8 @@ fun tree/contains(t: tree<a>, value: a, ?cmp: (a, a) -> order): bool
     Bra(v, _, l, _) | value < v -> l.contains(value)
     Bra(_, _, _, r) -> r.contains(value)
 
-// Check whether a value belongs to a set
+// Check whether a value belongs to a set.
+// The time complexity is O(log size).
 pub fun contains(s: set<a>, value: a, ?cmp: (a, a) -> order): bool
   s.tree.contains(value)
 
@@ -119,7 +120,8 @@ fun add-intl(t: tree<a>, value: a, ?cmp: (a, a) -> order): (tree<a>, bool, bool)
       (t'', grown', added)
 
 // Add a value to a set.
-// Do nothing if the given value already exists
+// Do nothing if the given value already exists.
+// The time complexity is O(log size).
 pub fun add(s: set<a>, value: a, ?cmp: (a, a) -> order): set<a>
   val (t, _, added) = s.tree.add-intl(value)
   Set(t, if added then s.size + 1 else s.size)
@@ -130,7 +132,8 @@ fun tree/min(t: tree<a>): maybe<a>
     Bra(v, _, Emp, _) -> Just(v)
     Bra(_, _, l, _) -> l.min
 
-// Return the minimum element of a set
+// Return the minimum element of a set.
+// The time complexity is O(log size).
 pub fun min(s: set<a>): maybe<a>
   s.tree.min
 
@@ -140,7 +143,8 @@ fun tree/max(t: tree<a>): maybe<a>
     Bra(v, _, _, Emp) -> Just(v)
     Bra(_, _, _, r) -> r.max
 
-// Return the maximum element of a set
+// Return the maximum element of a set.
+// The time complexity is O(log size).
 pub fun max(s: set<a>): maybe<a>
   s.tree.max
 
@@ -183,7 +187,8 @@ fun remove-intl(t: tree<a>, value: a, ?cmp: (a, a) -> order): (tree<a>, bool, bo
       (Emp, True, True)
 
 // Remove an element from a set.
-// Do nothing if the given value does not exist
+// Do nothing if the given value does not exist.
+// The time complexity is O(log size).
 pub fun remove(s: set<a>, value: a, ?cmp: (a, a) -> order): set<a>
   val (t, _, deleted) = s.tree.remove-intl(value)
   Set(t, if deleted then s.size - 1 else s.size)
