@@ -38,18 +38,18 @@ pub fun singleton(v: a): set<a>
   Bra( value = v, skew = E, left = Emp, right = Emp )
 
 // Check whether a value belongs to a set
-pub fun contains(t: set<a>, v: a, ?cmp: (a, a) -> order): bool
+pub fun contains(t: set<a>, value: a, ?cmp: (a, a) -> order): bool
   match t
     Emp -> False
-    Bra(a, _, _, _) | v == a -> True
-    Bra(a, _, l, _) | v < a -> l.contains(v)
-    Bra(_, _, _, r) -> r.contains(v)
+    Bra(v, _, _, _) | value == v -> True
+    Bra(v, _, l, _) | value < v -> l.contains(value)
+    Bra(_, _, _, r) -> r.contains(value)
 
 // 左の部分木が 2 だけ高くなっていたら修正する
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
 // 要素の削除の場合、「右」の部分木から削除したときであり、逆になるので注意が必要
 // 2番目の戻り値が True のとき、修正前後で木の高さは変わらない
-fun adjust-l(t: set<a>): (set<a>, bool)
+fun adjust-left(t: set<a>): (set<a>, bool)
   match t
     Bra(a, E, l, r) -> (Bra(a, L, l, r), True)
     Bra(a, R, l, r) -> (Bra(a, E, l, r), False)
@@ -65,7 +65,7 @@ fun adjust-l(t: set<a>): (set<a>, bool)
       (Bra(c, E, Bra(b, L, l', l''), Bra(a, E, r'', r)), False)
     _ -> (t, False) // for exhaustive check
 
-fun adjust-r(t: set<a>): (set<a>, bool)
+fun adjust-right(t: set<a>): (set<a>, bool)
   match t
     Bra(a, L, l, r) -> (Bra(a, E, l, r), False)
     Bra(a, E, l, r) -> (Bra(a, R, l, r), True)
@@ -84,82 +84,82 @@ fun adjust-r(t: set<a>): (set<a>, bool)
 // add-intl(t, v) = (t', grown)
 //    t' : t に v を挿入して得られる木
 // grown : 高さが 1 増えたか
-fun add-intl(t: set<a>, v: a, ?cmp: (a, a) -> order): (set<a>, bool)
+fun add-intl(t: set<a>, value: a, ?cmp: (a, a) -> order): (set<a>, bool)
   match t
-    Emp -> (singleton(v), True)
-    Bra(a, _, _, _) | v == a -> (t, False) // v がすでに存在するときは追加しない
-    Bra(a, s, l, r) | v < a ->
-      val (l', grown) = l.add-intl(v)
-      val t' = Bra(a, s, l', r)
+    Emp -> (singleton(value), True)
+    Bra(v, _, _, _) | value == v -> (t, False) // v がすでに存在するときは追加しない
+    Bra(v, s, l, r) | value < v ->
+      val (l', grown) = l.add-intl(value)
+      val t' = Bra(v, s, l', r)
       if !grown then return (t', False)
-      t'.adjust-l
-    Bra(a, s, l, r) ->
-      val (r', grown) = r.add-intl(v)
-      val t' = Bra(a, s, l, r')
+      t'.adjust-left
+    Bra(v, s, l, r) ->
+      val (r', grown) = r.add-intl(value)
+      val t' = Bra(v, s, l, r')
       if !grown then return (t', False)
-      t'.adjust-r
+      t'.adjust-right
 
 // Add a value to a set.
 // Do nothing if the given value already exists
-pub fun add(t: set<a>, v: a, ?cmp: (a, a) -> order): set<a>
-  t.add-intl(v).fst
+pub fun add(t: set<a>, value: a, ?cmp: (a, a) -> order): set<a>
+  t.add-intl(value).fst
 
 // Return the minimum element of a set
 pub fun min(t: set<a>): maybe<a>
   match t
     Emp -> Nothing
-    Bra(a, _, Emp, _) -> Just(a)
+    Bra(v, _, Emp, _) -> Just(v)
     Bra(_, _, l, _) -> l.min
 
 // Return the maximum element of a set
 pub fun max(t: set<a>): maybe<a>
   match t
     Emp -> Nothing
-    Bra(a, _, _, Emp) -> Just(a)
+    Bra(v, _, _, Emp) -> Just(v)
     Bra(_, _, _, r) -> r.max
 
 // remove-intl(t, v) = (t', deleted, shrinked)
 //          t' : t から v をなくした木
 //     deleted : v を削除したか (元からなければ false)
 //    shrinked : 高さが 1 減ったか
-fun remove-intl(t: set<a>, v: a, ?cmp: (a, a) -> order): (set<a>, bool, bool)
+fun remove-intl(t: set<a>, value: a, ?cmp: (a, a) -> order): (set<a>, bool, bool)
   match t
     Emp -> (Emp, False, False)
-    Bra(a, s, l, r) | v < a ->
-      val (l', deleted, shrinked) = l.remove-intl(v)
-      val t' = Bra(a, s, l', r)
+    Bra(v, s, l, r) | value < v ->
+      val (l', deleted, shrinked) = l.remove-intl(value)
+      val t' = Bra(v, s, l', r)
       if !shrinked then return (t', deleted, False)
-      val (t'', not-shrinked') = t'.adjust-r
+      val (t'', not-shrinked') = t'.adjust-right
       (t'', deleted, !not-shrinked')
-    Bra(a, s, l, r) | v > a ->
-      val (r', deleted, shrinked) = r.remove-intl(v)
-      val t' = Bra(a, s, l, r')
+    Bra(v, s, l, r) | value > v ->
+      val (r', deleted, shrinked) = r.remove-intl(value)
+      val t' = Bra(v, s, l, r')
       if !shrinked then return (t', deleted, False)
-      val (t'', not-shrinked') = t'.adjust-l
+      val (t'', not-shrinked') = t'.adjust-left
       (t'', deleted, !not-shrinked')
     Bra(_, s, l, r) ->
       match r.min
-        Just(mn) ->
-          val (r', _, shrinked) = r.remove-intl(mn)
-          val t' = Bra(mn, s, l, r')
+        Just(min-v) ->
+          val (r', _, shrinked) = r.remove-intl(min-v)
+          val t' = Bra(min-v, s, l, r')
           if !shrinked then return (t', True, False)
-          val (t'', not-shrinked') = t'.adjust-l
+          val (t'', not-shrinked') = t'.adjust-left
           return (t'', True, !not-shrinked')
         _ -> ()
       match l.max
-        Just(mx) ->
-          val (l', _, shrinked) = l.remove-intl(mx)
-          val t' = Bra(mx, s, l', r)
+        Just(max-v) ->
+          val (l', _, shrinked) = l.remove-intl(max-v)
+          val t' = Bra(max-v, s, l', r)
           if !shrinked then return (t', True, False)
-          val (t'', not-shrinked') = t'.adjust-r
+          val (t'', not-shrinked') = t'.adjust-right
           return (t'', True, !not-shrinked')
         _ -> ()
       (Emp, True, True)
 
 // Remove an element from a set.
 // Do nothing if the given value does not exist
-pub fun remove(t: set<a>, v: a, ?cmp: (a, a) -> order): set<a>
-  t.remove-intl(v).fst
+pub fun remove(t: set<a>, value: a, ?cmp: (a, a) -> order): set<a>
+  t.remove-intl(value).fst
 
 // Iterate over elements in ascending order
 pub fun foreach(t: set<a>, action: a -> e ()): e ()
