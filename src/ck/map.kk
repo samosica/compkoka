@@ -6,17 +6,21 @@ type skewness
   E
   R
 
-abstract type tree<k,v>
+type tree<k,v>
   Emp
   Bra{ key: k; value: v; skew: skewness; left: tree<k,v>; right: tree<k,v> }
 
-// Note: `map<v>` stores the number of key-value pairs, `size`, in order to
+// Note: `map<v>` stores the number of key-value pairs, `size'`, in order to
 // compute it in constant time, not in logarithmic time.
 
-value struct map<k,v>
+abstract value struct map<k,v>
   tree: tree<k,v>
-  // The number of key-value pairs
-  pub size: int
+  size': int
+
+// Return the number of key-value pairs.
+// The time complexity is O(1).
+pub fun size(m: map<k,v>): int
+  m.size'
 
 fun skewness/show(s: skewness): string
   match s
@@ -231,7 +235,7 @@ fun tree/get(t: tree<k,v>, key: k, ?cmp: (k, k) -> order): maybe<v>
 pub fun get(m: map<k,v>, key: k, ?cmp: (k, k) -> order): maybe<v>
   m.tree.get(key)
 
-pub fun tree/foreach(t: tree<k,v>, action: (k, v) -> e ()): e()
+fun tree/foreach(t: tree<k,v>, action: (k, v) -> e ()): e()
   match t
     Emp -> ()
     Bra(k, v, _, l, r) ->
@@ -243,7 +247,7 @@ pub fun tree/foreach(t: tree<k,v>, action: (k, v) -> e ()): e()
 pub fun foreach(m: map<k,v>, action: (k, v) -> e ()): e()
   m.tree.foreach(action)
 
-pub fun tree/foreach-key(t: tree<k,v>, action: k -> e ()): e()
+fun tree/foreach-key(t: tree<k,v>, action: k -> e ()): e()
   match t
     Emp -> ()
     Bra(k, _, _, l, r) ->
