@@ -31,8 +31,7 @@ pub fun is-empty(t: set<a>): bool
     _ -> False
 
 // Create an empty set
-pub fun empty(): set<a>
-  Emp
+pub val empty: forall<a> set<a> = Emp
 
 // Create a set with a single element
 pub fun singleton(v: a): set<a>
