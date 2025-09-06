@@ -82,28 +82,28 @@ fun adjust-r(t: set): (set, bool)
       (Bra(c, E, Bra(a, L, l, l''), Bra(b, E, r'', r')), False)
     _ -> (t, False) // for exhaustive check
 
-// insert-intl(t, v) = (t', grown)
+// add-intl(t, v) = (t', grown)
 //    t' : t に v を挿入して得られる木
 // grown : 高さが 1 増えたか
-fun insert-intl(t: set, v: int): (set, bool)
+fun add-intl(t: set, v: int): (set, bool)
   match t
     Emp -> (singleton(v), True)
     Bra(a, _, _, _) | v == a -> (t, False) // v がすでに存在するときは追加しない
     Bra(a, s, l, r) | v < a ->
-      val (l', grown) = l.insert-intl(v)
+      val (l', grown) = l.add-intl(v)
       val t' = Bra(a, s, l', r)
       if !grown then return (t', False)
       t'.adjust-l
     Bra(a, s, l, r) ->
-      val (r', grown) = r.insert-intl(v)
+      val (r', grown) = r.add-intl(v)
       val t' = Bra(a, s, l, r')
       if !grown then return (t', False)
       t'.adjust-r
 
 // Add a value to a set.
 // Do nothing if the given value already exists
-pub fun insert(t: set, v: int): set
-  t.insert-intl(v).fst
+pub fun add(t: set, v: int): set
+  t.add-intl(v).fst
 
 // Return the minimum element of a set
 pub fun min(t: set): maybe<int>
