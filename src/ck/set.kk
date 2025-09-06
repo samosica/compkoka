@@ -39,12 +39,12 @@ pub fun singleton(v: int)
   Bra( value = v, skew = E, left = Emp, right = Emp )
 
 // Check whether a value belongs to a set
-pub fun mem(t: set, v: int): bool
+pub fun contains(t: set, v: int): bool
   match t
     Emp -> False
     Bra(a, _, _, _) | v == a -> True
-    Bra(a, _, l, _) | v < a -> l.mem(v)
-    Bra(_, _, _, r) -> r.mem(v)
+    Bra(a, _, l, _) | v < a -> l.contains(v)
+    Bra(_, _, _, r) -> r.contains(v)
 
 // 左の部分木が 2 だけ高くなっていたら修正する
 // 要素の挿入の場合、この関数を呼び出すのは左の部分木に挿入したときだが、
