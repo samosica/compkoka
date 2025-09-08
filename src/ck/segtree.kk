@@ -1,5 +1,13 @@
 /* Segment tree
 
+Segment tree is a data structure for efficient range operations on sequences.
+
+Notes:
+
+- A binary operation to be used may be a partial function as long as it can be
+  applied to any consecutive elements in a sequence. Hence `segtree` can handle
+  matrix sum/production and range union.
+
 Usage:
 
 ```
@@ -17,6 +25,7 @@ fun main()
 */
 module ck/segtree
 
+import std/core/int
 import std/core/undiv
 import ck/algebra/monoid
 
@@ -36,6 +45,40 @@ pub fun segtree(n: int, ?monoid: monoid<a>): alloc<h> segtree<h,a>
     ref(vector(n * 2, ?monoid.one)),
     n
   )
+
+// Note: `@unsafe-vector` is introduced in Koka v3.1.3.
+
+// Unsafe function.
+// This function is an internal function in the standard library.
+// See <https://koka-lang.github.io/koka/doc/std_core_vector.html>
+inline extern unsafe-vector(n: ssize_t): total vector<a>
+  c inline "kk_vector_alloc(#1, kk_box_null(), kk_context())"
+
+pub fun list/segtree(l: list<a>, ?monoid: monoid<a>): <alloc<h>,div,exn> segtree<h,a>
+  val n = l.length
+  var prod := unsafe-vector((n * 2).ssize_t)
+  l.foreach-indexed fn(i, v)
+    prod[i + n] := v
+  inline fun loop(left: int, right: int)
+    if right <= left then return ()
+    for(left, right - 1) fn(i)
+      prod[i] := (?monoid.mul)(prod[i * 2], prod[i * 2 + 1])
+    loop(((left + 1) / 2).pretend-decreasing, right / 2)
+  loop((n + 1) / 2, n)
+  Segtree(ref(prod), n)
+
+pub fun vector/segtree(v: vector<a>, ?monoid: monoid<a>): <alloc<h>,div,exn> segtree<h,a>
+  val n = v.length
+  var prod := unsafe-vector((n * 2).ssize_t)
+  for(n) fn(i)
+    prod[i + n] := v[i]
+  inline fun loop(left: int, right: int)
+    if right <= left then return ()
+    for(left, right - 1) fn(i)
+      prod[i] := (?monoid.mul)(prod[i * 2], prod[i * 2 + 1])
+    loop(((left + 1) / 2).pretend-decreasing, right / 2)
+  loop((n + 1) / 2, n)
+  Segtree(ref(prod), n)
 
 // Get the `k`-th element.
 // The first element is at position 0 (0-based).
