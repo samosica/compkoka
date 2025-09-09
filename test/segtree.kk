@@ -4,6 +4,9 @@ import base
 import ck/algebra/monoid
 import ck/segtree
 
+// TODO: move this monoid into algebra/monoid
+val nat/max/monoid: monoid<int> = Monoid(one=0, mul=max)
+
 pub fun main()
   test("segtree")
     fun proc(?monoid)
@@ -100,3 +103,51 @@ pub fun main()
             ?(==)=fn(p1, p2) tuple2/(==)(p1, p2, ?fst/(==)=int/(==), ?snd/(==)=int/(==))
           )
         )
+  test("binsearch(max, 8)")
+    fun proc(?monoid)
+      val n = 8
+      val seg = segtree(n)
+      val v = [2, 4, 3, 0, 7, 6, 1, 5].vector
+      for(n) fn(i)
+        seg.set(i, v[i])
+      for(-1, n) fn(x)
+        for(n) fn(l)
+          for(l, n) fn(r)
+            // Find the first element greater than or equal to x in [l, r)
+            expect(
+              seg.binsearch(l, r, fn(mx) mx >= x),
+              list(l, r - 1).find(fn(i) v[i] >= x).default(r)
+            )
+    proc(?monoid=nat/max/monoid)
+  test("binsearch(max, 11)")
+    fun proc(?monoid)
+      val n = 11
+      val seg = segtree(n)
+      val v = [1, 6, 5, 3, 7, 4, 8, 10, 2, 9, 0].vector
+      for(n) fn(i)
+        seg.set(i, v[i])
+      for(-1, n) fn(x)
+        for(n) fn(l)
+          for(l, n) fn(r)
+            // Find the first element greater than or equal to x in [l, r)
+            expect(
+              seg.binsearch(l, r, fn(mx) mx >= x),
+              list(l, r - 1).find(fn(i) v[i] >= x).default(r)
+            )
+    proc(?monoid=nat/max/monoid)
+  test("binsearch(add, 8)")
+    fun proc(?monoid)
+      val n = 8
+      val seg = segtree(n)
+      val v = [2, 4, 3, 0, 7, 6, 1, 5].vector
+      for(n) fn(i)
+        seg.set(i, v[i])
+      val range-sum = fn(l: int, r: int) list(l, r).map(fn(i) v[i]).sum
+      for(-1, n * (n - 1) / 2 + 1) fn(x)
+        for(n) fn(l)
+          for(l, n) fn(r)
+            expect(
+              seg.binsearch(l, r, fn(sum) sum >= x),
+              list(l, r - 1).find(fn(i) range-sum(l, i) >= x).default(r)
+            )
+    proc(?monoid=int/add/monoid)

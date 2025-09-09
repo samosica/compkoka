@@ -144,21 +144,41 @@ pub fun product(seg: segtree<h,a>, left: int, right: int, ?monoid: monoid<a>): <
     ?monoid.one
   )
 
-// TODO: fix binsearch
-// Return the largest integer `k` such that the product from the first element
-// (inclusive) to the `k`-th element (exclusive) holds `p`.
+// Return the smallest integer `k` between `start` (inclusive) and `end` (exclusive)
+// such that the product from the `start`-th element (inclusive) to the `k`-th
+// element (inclusive) holds `p`. If no such `k` exists, return `end`.
 // The first element is at position 0 (0-based).
-// `p` must be decreasing and the product of the empty interval must hold `p`.
+// `p` must be increasing.
 pub fun binsearch(
   seg: segtree<h,a>,
-  p: forall<h1> a -> <read<h1>,div,exn|e> bool,
+  start: int,
+  end: int,
+  p: forall<h1> a -> <pure,read<h1>|e> bool,
   ?monoid: monoid<a>
-): <read<h>,div,exn|e> int
-  fun loop(k, i, v, w)
-    if w == 1 then return i
-    val v' = (!seg.prod)[k * 2]
-    if p((?monoid.mul)(v, v')) then
-      loop(k * 2, i, v, w / 2)
+): <pure,read<h>|e> int
+  fun extend(rs: list<int>, pl)
+    match rs
+      Nil -> (end + seg.leaf-count, pl)
+      Cons(r, rs') ->
+        val pl' = (?monoid.mul)(pl, (!seg.prod)[r])
+        if p(pl') then (r, pl) else extend(rs', pl')
+  fun big-step(l: int, r: int, rs: list<int>, pl)
+    if r <= l then return extend(rs, pl)
+    val l' = (l + 1) / 2
+    val r' = r / 2
+    val rs' = if r % 2 == 1 then Cons(r - 1, rs) else rs
+    val pl' = if l % 2 == 1 then (?monoid.mul)(pl, (!seg.prod)[l]) else pl
+    if l % 2 == 1 && p(pl') then return (l, pl)
+    big-step(l'.pretend-decreasing, r', rs', pl')
+  fun small-step(i: int, pl)
+    if i >= seg.leaf-count then
+      i
     else
-      loop(k * 2 + 1, i + w / 2, (?monoid.mul)(v, v'), w / 2)
-  loop(1, 0, ?monoid.one, seg.leaf-count)
+      val pl' = (?monoid.mul)(pl, (!seg.prod)[i * 2])
+      if p(pl') then
+        small-step(i * 2, pl)
+      else
+        small-step(i * 2 + 1, pl')
+  val (bi, pl) = big-step(start + seg.leaf-count, end + seg.leaf-count, [], ?monoid.one)
+  val si = if bi < end + seg.leaf-count then small-step(bi, pl) else bi
+  si - seg.leaf-count
