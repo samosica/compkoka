@@ -29,9 +29,5 @@ pub fun tuple4/monoid(ma: monoid<a>, mb: monoid<b>, mc: monoid<c>, md: monoid<d>
     mul = fn((a1, b1, c1, d1), (a2, b2, c2, d2)) ((ma.mul)(a1, a2), (mb.mul)(b1, b2), (mc.mul)(c1, c2), (md.mul)(d1, d2))
   )
 
-// Note: since version 3.2.0, this function is not chosen as implicit parameters
-//       unless you do not pass it explicitly due to the `default` scope. See
-//       <https://github.com/koka-lang/koka/blob/70410958f6f828e3e3999b2ea34a59e18f465f94/samples/learn/implicits.kk#L139-L144>.
-
-pub fun default/opposite/monoid(?monoid: monoid<a>): monoid<a>
+pub fun opposite-monoid(?monoid: monoid<a>): monoid<a>
   Monoid(one = ?monoid.one, mul = fn(x, y) (?monoid.mul)(y, x))
