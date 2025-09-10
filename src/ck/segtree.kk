@@ -6,7 +6,7 @@ Notes:
 
 - A binary operation to be used may be a partial function as long as it can be
   applied to any consecutive elements in a sequence. Hence `segtree` can handle
-  matrix sum/production and range union.
+  matrix production and range union.
 
 Usage:
 
