@@ -40,7 +40,7 @@ fun floor-log(n: int, base: int): int
     floor-log((n / base).pretend-decreasing, base) + 1
 
 // Create a segment tree
-pub fun segtree(n: int, ?monoid: monoid<a>): alloc<h> segtree<h,a>
+pub inline fun segtree(n: int, ?monoid: monoid<a>): alloc<h> segtree<h,a>
   Segtree(
     ref(vector(n * 2, ?monoid.one)),
     n
@@ -82,7 +82,7 @@ pub fun vector/segtree(v: vector<a>, ?monoid: monoid<a>): <alloc<h>,div,exn> seg
 
 // Get the `k`-th element.
 // The first element is at position 0 (0-based).
-pub fun @index(^seg: segtree<h,a>, ^k: int): <read<h>,div,exn> a
+pub inline fun @index(^seg: segtree<h,a>, ^k: int): <read<h>,div,exn> a
   (!seg.prod)[k + seg.leaf-count]
 
 inline fun recalc(seg: segtree<h,a>, k: int, ?monoid: monoid<a>): <read<h>,write<h>,div,exn> ()
@@ -111,18 +111,15 @@ pub fun set(seg: segtree<h,a>, k: int, v: a, ?monoid: monoid<a>): <read<h>,write
 pub fun update(
   seg: segtree<h,a>,
   k: int,
-  f: forall<h1> a -> <local<h1>,div,exn|e> a,
+  f: forall<h1> a -> <read<h1>,write<h1>,div,exn|e> a,
   ?monoid: monoid<a>
 ): <read<h>,write<h>,div,exn|e> ()
-  val k' = k + seg.leaf-count
-  seg.prod.modify fn(prod)
-    prod[k'] := f(prod[k'])
-  seg.recalc(k')
+  seg.set(k, f(seg[k]))
 
 // Return the product from the `left`-th element (inclusive) to `right`-th element (exclusive).
 // The first element is at position 0 (0-based).
 pub fun product(seg: segtree<h,a>, left: int, right: int, ?monoid: monoid<a>): <read<h>,div,exn> a
-  fun loop(l: int, r: int, pl, pr)
+  inline fun loop(l: int, r: int, pl, pr)
     if l < r then
       val (l', pl') =
         if l % 2 > 0 then
@@ -156,13 +153,13 @@ pub fun binsearch(
   p: forall<h1> a -> <pure,read<h1>|e> bool,
   ?monoid: monoid<a>
 ): <pure,read<h>|e> int
-  fun extend(rs: list<int>, pl)
+  inline fun extend(rs: list<int>, pl)
     match rs
       Nil -> (end + seg.leaf-count, pl)
       Cons(r, rs') ->
         val pl' = (?monoid.mul)(pl, (!seg.prod)[r])
         if p(pl') then (r, pl) else extend(rs', pl')
-  fun big-step(l: int, r: int, rs: list<int>, pl)
+  inline fun big-step(l: int, r: int, rs: list<int>, pl)
     if r <= l then return extend(rs, pl)
     val l' = (l + 1) / 2
     val r' = r / 2
@@ -170,7 +167,7 @@ pub fun binsearch(
     val pl' = if l % 2 == 1 then (?monoid.mul)(pl, (!seg.prod)[l]) else pl
     if l % 2 == 1 && p(pl') then return (l, pl)
     big-step(l'.pretend-decreasing, r', rs', pl')
-  fun small-step(i: int, pl)
+  inline fun small-step(i: int, pl)
     if i >= seg.leaf-count then
       i
     else
