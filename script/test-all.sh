@@ -7,10 +7,10 @@ readonly CURDIR
 usage(){
     cat <<EOF
 Usage: $0
-Perform all tests
+Run all tests
 
 Options:
-    -h, --help          help
+    -h, --help              help
 
 Environment variables:
     koka_compiler           specify compiler path (default: koka)

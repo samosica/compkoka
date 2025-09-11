@@ -17,7 +17,7 @@ Usage: $0
 Compilation test
 
 Options:
-    -h, --help          help
+    -h, --help              help
 
 Environment variables:
     koka_compiler           specify compiler path (default: koka)

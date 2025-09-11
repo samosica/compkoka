@@ -14,10 +14,10 @@ trap "rm -r $TEMP_DIR" 0
 usage(){
     cat <<EOF
 Usage: $0
-Test library with IO
+Run unit tests using IO
 
 Options:
-    -h, --help          help
+    -h, --help              help
 
 Environment variables:
     koka_compiler           specify compiler path (default: koka)
