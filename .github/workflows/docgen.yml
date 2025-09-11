@@ -17,7 +17,7 @@ jobs:
         version: ['v3.0.4', 'v3.1.3', 'v3.2.2']
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Create .koka-version
         run: echo "$KOKA_VERSION" >> .koka-version
@@ -42,7 +42,7 @@ jobs:
       # - <https://docs.github.com/ja/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation>
       - name: Generate a token
         id: generate-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.1
         with:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -63,7 +63,7 @@ jobs:
           USER_ID: ${{ steps.get-user-id.outputs.user-id }}
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           token: ${{ steps.generate-token.outputs.token }}
           persist-credentials: false
@@ -96,7 +96,7 @@ jobs:
           git config --unset-all http.https://github.com/.extraheader
 
       - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           token: ${{ steps.generate-token.outputs.token }}
           persist-credentials: false
