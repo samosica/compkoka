@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CURDIR=$(cd "$(dirname "$0")" && pwd)
-readonly CURDIR
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+readonly SCRIPT_DIR
 
-KOKA_COMPILE_OPTIONS=${KOKA_COMPILE_OPTIONS-}
+readonly ROOT_DIR=$SCRIPT_DIR/..
+
+TEMP_DIR=$(mktemp -d)
+readonly TEMP_DIR
+# shellcheck disable=SC2064
+trap "rm -r $TEMP_DIR" 0
 
 usage(){
     cat <<EOF
@@ -12,10 +17,11 @@ Usage: $0
 Compilation test
 
 Options:
-    -h, --help          help
+    -h, --help              help
 
 Environment variables:
-    KOKA_COMPILE_OPTIONS    specify compile options (default: none)
+    koka_compiler           specify compiler path (default: koka)
+    koka_options            specify compile options (default: none)
 EOF
 }
 
@@ -26,22 +32,23 @@ read_args(){
             *) usage; exit 1;;
         esac
     done
+
+    koka_compiler=${koka_compiler:-koka}
+    koka_options=${koka_options-}
 }
 
 run_test(){
-    cd "$CURDIR/../src"
-    # shellcheck disable=SC2086
-    koka --library --no-debug -v0 $KOKA_COMPILE_OPTIONS ck/*.kk toc.kk
-    rm -r .koka
+    cd "$ROOT_DIR/src"
+    "$koka_compiler" --library --no-debug -v0 --outputdir="$TEMP_DIR" ck/*.kk toc.kk
 }
 
 read_args "$@"
 
 if [ -n "${GITHUB_ACTION-}" ]; then
-    echo "::group::Run compilation test (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    echo "::group::Run compilation test (compile options: \"$koka_options\")"
     run_test
     echo '::endgroup::'
 else
-    echo "Run compilation test (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    echo "Run compilation test (compile options: \"$koka_options\")"
     run_test
 fi
