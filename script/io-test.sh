@@ -11,8 +11,8 @@ readonly TEMP_DIR
 # shellcheck disable=SC2064
 trap "rm -r $TEMP_DIR" 0
 
-KOKA_COMPILER=${KOKA_COMPILER:-koka}
-KOKA_COMPILE_OPTIONS=${KOKA_COMPILE_OPTIONS-}
+koka_compiler=${koka_compiler:-koka}
+koka_options=${koka_options-}
 
 usage(){
     cat <<EOF
@@ -23,8 +23,8 @@ Options:
     -h, --help          help
 
 Environment variables:
-    KOKA_COMPILER           specify compiler path (default: koka)
-    KOKA_COMPILE_OPTIONS    specify compile options (default: none)
+    koka_compiler           specify compiler path (default: koka)
+    koka_options            specify compile options (default: none)
 EOF
 }
 
@@ -54,7 +54,7 @@ run_test(){
 
     echo -n "Testing $prog: "
     # shellcheck disable=SC2086
-    if ! "$KOKA_COMPILER" --no-debug -i"$ROOT_DIR/src" -o "$exe" $KOKA_COMPILE_OPTIONS "$prog" >out 2>&1; then
+    if ! "$koka_compiler" --no-debug -i"$ROOT_DIR/src" -o "$exe" "$prog" >out 2>&1; then
         red "FAILED"
         cat out
         exit 1
@@ -96,10 +96,10 @@ run_tests(){
 read_args "$@"
 
 if [ -n "${GITHUB_ACTION-}" ]; then
-    echo "::group::Run unit tests with IO (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    echo "::group::Run unit tests with IO (compile options: \"$koka_options\")"
     run_tests
     echo '::endgroup::'
 else
-    echo "Run unit tests with IO (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    echo "Run unit tests with IO (compile options: \"$koka_options\")"
     run_tests
 fi

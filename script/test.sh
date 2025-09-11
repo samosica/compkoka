@@ -4,8 +4,8 @@ set -euo pipefail
 CURDIR=$(cd "$(dirname "$0")" && pwd)
 readonly CURDIR
 
-KOKA_COMPILER=${KOKA_COMPILER:-koka}
-KOKA_COMPILE_OPTIONS=${KOKA_COMPILE_OPTIONS-}
+koka_compiler=${koka_compiler:-koka}
+koka_options=${koka_options-}
 
 usage(){
     cat <<EOF
@@ -16,8 +16,8 @@ Options:
     -h, --help          help
 
 Environment variables:
-    KOKA_COMPILER           specify compiler path (default: koka)
-    KOKA_COMPILE_OPTIONS    specify compile options (default: none)
+    koka_compiler           specify compiler path (default: koka)
+    koka_options            specify compile options (default: none)
 EOF
 }
 
@@ -33,7 +33,7 @@ read_args(){
 run_test(){
     cd "$CURDIR/../test"
     # shellcheck disable=SC2086
-    "$KOKA_COMPILER" --no-debug -i../src -o all.exe -v0 $KOKA_COMPILE_OPTIONS all.kk
+    "$koka_compiler" --no-debug -i../src -o all.exe -v0 all.kk
     chmod +x all.exe
     ./all.exe
     rm all.exe
@@ -42,10 +42,10 @@ run_test(){
 read_args "$@"
 
 if [ -n "${GITHUB_ACTION-}" ]; then
-    echo "::group::Run unit tests (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    echo "::group::Run unit tests (compile options: \"$koka_options\")"
     run_test
     echo '::endgroup::'
 else
-    echo "Run unit tests (compile options: \"$KOKA_COMPILE_OPTIONS\")"
+    echo "Run unit tests (compile options: \"$koka_options\")"
     run_test
 fi

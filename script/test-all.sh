@@ -13,7 +13,7 @@ Options:
     -h, --help          help
 
 Environment variables:
-    KOKA_COMPILER           specify compiler path (default: koka)
+    koka_compiler           specify compiler path (default: koka)
 EOF
 }
 
@@ -28,16 +28,16 @@ read_args(){
 
 read_args "$@"
 
-KOKA_COMPILE_OPTION_SETS=('' '-O2')
+KOKA_OPTION_SETS=('' '-O2')
 
 cd "$CURDIR"
-export KOKA_COMPILE_OPTIONS
-for KOKA_COMPILE_OPTIONS in "${KOKA_COMPILE_OPTION_SETS[@]}"; do
+export koka_options
+for koka_options in "${KOKA_OPTION_SETS[@]}"; do
     ./compilation-test.sh
 done
-for KOKA_COMPILE_OPTIONS in "${KOKA_COMPILE_OPTION_SETS[@]}"; do
+for koka_options in "${KOKA_OPTION_SETS[@]}"; do
     ./test.sh
 done
-for KOKA_COMPILE_OPTIONS in "${KOKA_COMPILE_OPTION_SETS[@]}"; do
+for koka_options in "${KOKA_OPTION_SETS[@]}"; do
     ./io-test.sh
 done
