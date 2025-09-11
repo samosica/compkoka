@@ -4,6 +4,7 @@ set -euo pipefail
 CURDIR=$(cd "$(dirname "$0")" && pwd)
 readonly CURDIR
 
+KOKA_COMPILER=${KOKA_COMPILER:-koka}
 KOKA_COMPILE_OPTIONS=${KOKA_COMPILE_OPTIONS-}
 
 usage(){
@@ -15,6 +16,7 @@ Options:
     -h, --help          help
 
 Environment variables:
+    KOKA_COMPILER           specify compiler path (default: koka)
     KOKA_COMPILE_OPTIONS    specify compile options (default: none)
 EOF
 }
@@ -31,7 +33,7 @@ read_args(){
 run_test(){
     cd "$CURDIR/../src"
     # shellcheck disable=SC2086
-    koka --library --no-debug -v0 $KOKA_COMPILE_OPTIONS ck/*.kk toc.kk
+    "$KOKA_COMPILER" --library --no-debug -v0 $KOKA_COMPILE_OPTIONS ck/*.kk toc.kk
     rm -r .koka
 }
 

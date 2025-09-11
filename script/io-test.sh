@@ -11,6 +11,7 @@ readonly TEMP_DIR
 # shellcheck disable=SC2064
 trap "rm -r $TEMP_DIR" 0
 
+KOKA_COMPILER=${KOKA_COMPILER:-koka}
 KOKA_COMPILE_OPTIONS=${KOKA_COMPILE_OPTIONS-}
 
 usage(){
@@ -22,6 +23,7 @@ Options:
     -h, --help          help
 
 Environment variables:
+    KOKA_COMPILER           specify compiler path (default: koka)
     KOKA_COMPILE_OPTIONS    specify compile options (default: none)
 EOF
 }
@@ -52,7 +54,7 @@ run_test(){
 
     echo -n "Testing $prog: "
     # shellcheck disable=SC2086
-    if ! koka --no-debug -i"$ROOT_DIR/src" -o "$exe" $KOKA_COMPILE_OPTIONS "$prog" >out 2>&1; then
+    if ! "$KOKA_COMPILER" --no-debug -i"$ROOT_DIR/src" -o "$exe" $KOKA_COMPILE_OPTIONS "$prog" >out 2>&1; then
         red "FAILED"
         cat out
         exit 1
