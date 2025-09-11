@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CURDIR=$(cd "$(dirname "$0")" && pwd)
-readonly CURDIR
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+readonly SCRIPT_DIR
 
-koka_compiler=${koka_compiler:-koka}
-koka_options=${koka_options-}
+readonly ROOT_DIR=$SCRIPT_DIR/..
+
+TEMP_DIR=$(mktemp -d)
+readonly TEMP_DIR
+# shellcheck disable=SC2064
+trap "rm -r $TEMP_DIR" 0
 
 usage(){
     cat <<EOF
@@ -28,13 +32,14 @@ read_args(){
             *) usage; exit 1;;
         esac
     done
+
+    koka_compiler=${koka_compiler:-koka}
+    koka_options=${koka_options-}
 }
 
 run_test(){
-    cd "$CURDIR/../src"
-    # shellcheck disable=SC2086
-    "$koka_compiler" --library --no-debug -v0 ck/*.kk toc.kk
-    rm -r .koka
+    cd "$ROOT_DIR/src"
+    "$koka_compiler" --library --no-debug -v0 --outputdir="$TEMP_DIR" ck/*.kk toc.kk
 }
 
 read_args "$@"

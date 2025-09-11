@@ -4,15 +4,12 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 readonly SCRIPT_DIR
 
-ROOT_DIR=$SCRIPT_DIR/..
+readonly ROOT_DIR=$SCRIPT_DIR/..
 
 TEMP_DIR=$(mktemp -d)
 readonly TEMP_DIR
 # shellcheck disable=SC2064
 trap "rm -r $TEMP_DIR" 0
-
-koka_compiler=${koka_compiler:-koka}
-koka_options=${koka_options-}
 
 usage(){
     cat <<EOF
@@ -35,6 +32,9 @@ read_args(){
             *) usage; exit 1;;
         esac
     done
+
+    koka_compiler=${koka_compiler:-koka}
+    koka_options=${koka_options-}
 }
 
 green(){
@@ -53,7 +53,6 @@ run_test(){
     local out=${prefix}-out
 
     echo -n "Testing $prog: "
-    # shellcheck disable=SC2086
     if ! "$koka_compiler" --no-debug -i"$ROOT_DIR/src" -o "$exe" "$prog" >out 2>&1; then
         red "FAILED"
         cat out
