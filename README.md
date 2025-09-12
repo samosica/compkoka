@@ -14,7 +14,3 @@ The documentation is available through:
 compkoka is licensed under the MIT License (see LICENSE), but only when you
 submit a program containing the library to a competitive programming contest,
 you may omit the license statement.
-
-## TODO
-
-- [ ] Add tests
