@@ -28,16 +28,11 @@ module ck/segtree
 import std/core/int
 import std/core/undiv
 import ck/algebra/monoid
+import ck/math
 
 abstract value struct segtree<h,a>
   prod : ref<h,vector<a>>
   leaf-count : int
-
-fun floor-log(n: int, base: int): int
-  if n < base then
-    0
-  else
-    floor-log((n / base).pretend-decreasing, base) + 1
 
 // Create a segment tree
 pub inline fun segtree(n: int, ?monoid: monoid<a>): alloc<h> segtree<h,a>
