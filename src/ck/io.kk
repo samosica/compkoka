@@ -195,5 +195,15 @@ pub fun list/println(l: list<a>, sep: string = " ", ?print: a -> console ())
   l.print(sep)
   "".println
 
+pub fun vector/print(v: vector<a>, sep: string = " ", ?print: a -> console ())
+  var first := True
+  v.foreach fn(x)
+    if first then first := False else sep.print
+    x.print
+
+pub fun vector/println(v: vector<a>, sep: string = " ", ?print: a -> console ())
+  v.print(sep)
+  "".println
+
 pub extern flush(): console ()
     c inline "(fflush(stdout))"
