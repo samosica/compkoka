@@ -28,7 +28,7 @@ inline extern unsafe-assign(v: vector<a>, index: ssize_t, value: a): total ()
 /// - It is 2 times faster than when we do not use unsafe-* functions.
 
 // Stable sort
-pub fun sort(v: vector<a>, ?(<): (a, a) -> bool): pure vector<a>
+pub fun sort(v: vector<a>, ?(<): (a, a) -> <pure|e> bool): <pure|e> vector<a>
   var res := v
   var temp := unsafe-vector((v.length / 2).ssize_t)
   var p := 0
@@ -50,7 +50,9 @@ pub fun sort(v: vector<a>, ?(<): (a, a) -> bool): pure vector<a>
     l1 := l
     l2 := m
     while { l1 < m && l2 < r }
-      if res.unsafe-idx(l2.ssize_t) < temp.unsafe-idx((l1 - l).ssize_t) then
+      val v1 = temp.unsafe-idx((l1 - l).ssize_t)
+      val v2 = res.unsafe-idx(l2.ssize_t)
+      if mask<local>{ v2 < v1 } then
         res.unsafe-assign(p.ssize_t, res.unsafe-idx(l2.ssize_t))
         l2 := l2 + 1
       else
