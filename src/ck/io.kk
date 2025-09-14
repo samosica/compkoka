@@ -194,3 +194,6 @@ pub fun list/print(l: list<a>, sep: string = " ", ?print: a -> console ())
 pub fun list/println(l: list<a>, sep: string = " ", ?print: a -> console ())
   l.print(sep)
   "".println
+
+pub extern flush(): console ()
+    c inline "(fflush(stdout))"
