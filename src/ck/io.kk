@@ -185,6 +185,17 @@ pub fun default/quintuple/println(
   print(a, b, c, d, e)
   print("\n")
 
+// Print a character.
+// Unlike the default print function, this function does not insert quotes.
+pub fun char/print(c: char)
+  c.string.print
+
+// Print a character with a newline.
+// Unlike the default println function, this function does not insert quotes.
+pub fun char/println(c: char)
+  c.print
+  "".println
+
 pub fun list/print(l: list<a>, sep: string = " ", ?print: a -> console ())
   var first := True
   l.foreach fn(x)
