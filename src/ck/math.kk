@@ -1,3 +1,6 @@
+// Math
+module ck/math
+
 import std/core/undiv
 
 pub fun divisible-count(n: int, d: int): exn int
