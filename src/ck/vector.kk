@@ -72,16 +72,17 @@ pub fun sort(v: vector<a>, ?(<): (a, a) -> <pure|e> bool): <pure|e> vector<a>
 // Keep the first element for every consecutive sequence of duplicates.
 // For example, `[1, 2, 2, 1].vector.uniq` evaluates to `[1, 2, 1]`.
 pub fun uniq(v: vector<a>, ?(==): (a, a) -> <pure|e> bool): <pure|e> vector<a>
-  var res := []
-  var i := 0
-  var j := 1
-  while { i < v.length }
-    res := Cons(v[i], res)
-    while { j < v.length && v[j] == v[i] }
-      j := j + 1
-    i := j
-    j := j + 1
-  res.reverse.vector
+  fun uniq-next(i, j)
+    if j < v.length && v[j] == v[i] then
+      uniq-next(i, (j + 1).pretend-decreasing)
+    else
+      j
+  fun uniq-loop(i, acc)
+    if i == v.length then
+      acc
+    else
+      uniq-loop(uniq-next(i, i + 1), Cons(v[i], acc))
+  uniq-loop(0, []).reverse.vector
 
 // Return a vector whose `k`-th (0-based) element is the length of the longest
 // common prefix of `v` and the suffix starting with `v[k]`.
