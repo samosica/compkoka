@@ -68,6 +68,22 @@ pub fun sort(v: vector<a>, ?(<): (a, a) -> <pure|e> bool): <pure|e> vector<a>
   loop(0, v.length)
   res
 
+// Remove duplicates.
+// Keep the first element for every consecutive sequence of duplicates.
+// For example, `[1, 2, 2, 1].vector.uniq` evaluates to `[1, 2, 1]`.
+pub fun uniq(v: vector<a>, ?(==): (a, a) -> <pure|e> bool): <pure|e> vector<a>
+  fun uniq-next(i, j)
+    if j < v.length && v[j] == v[i] then
+      uniq-next(i, (j + 1).pretend-decreasing)
+    else
+      j
+  fun uniq-loop(i, acc)
+    if i == v.length then
+      acc
+    else
+      uniq-loop(uniq-next(i, i + 1), Cons(v[i], acc))
+  uniq-loop(0, []).reverse.vector
+
 // Return a vector whose `k`-th (0-based) element is the length of the longest
 // common prefix of `v` and the suffix starting with `v[k]`.
 pub fun z-algorithm(v: vector<a>, ?(==): (a, a) -> bool): exn vector<int>
@@ -130,3 +146,7 @@ pub fun search(v: vector<a>, sub: vector<a>, start: int = 0, ?(==): (a, a) -> bo
     if found then return Just(i)
     loop((i + 1).pretend-decreasing)
   loop(start)
+
+// Return the given vector, but with the elements reversed.
+pub fun reverse(v: vector<a>): exn vector<a>
+  vector-init(v.length, fn(i) v[v.length - 1 - i])
