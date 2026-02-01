@@ -17,4 +17,16 @@
     "automerge": true,
     "platformAutomerge": true,
   },
+  "packageRules": [
+    {
+      "description": "Disable minimum release age check for Docker image digests",
+      "matchDatasources": [
+        "docker",
+      ],
+      "matchUpdateTypes": [
+        "digest",
+      ],
+      "minimumReleaseAge": null,
+    },
+  ],
 }
