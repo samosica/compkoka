@@ -12,7 +12,7 @@ jobs:
     outputs:
       changed: ${{ steps.find-changes.outputs.targets == 'true' }}
     steps:
-      - uses: dorny/paths-filter@668c092af3649c4b664c54e4b704aa46782f6f7c
+      - uses: dorny/paths-filter@61f87a10cd2c304679af17bb73ef192addf33c1c
         id: find-changes
         with:
           filters: |
