@@ -28,12 +28,9 @@ inline extern unsafe-assign(v: vector<a>, index: ssize_t, value: a): total ()
 /// - It is 2 times faster than when we do not use unsafe-* functions.
 
 // Stable sort
-pub fun sort(v: vector<a>, ?(<): (a, a) -> <pure|e> bool): <pure|e> vector<a>
-  var res := v
-  var temp := unsafe-vector((v.length / 2).ssize_t)
-  var p := 0
-  var l1 := 0
-  var l2 := 0
+pub fun sort(v: vector<a>, ?(<): (a, a) -> e bool): e vector<a>
+  val res = v
+  val temp = unsafe-vector((v.length / 2).ssize_t)
 
   fun loop(l: int, r: int)
     if r - l <= 1 then
@@ -46,24 +43,23 @@ pub fun sort(v: vector<a>, ?(<): (a, a) -> <pure|e> bool): <pure|e> vector<a>
     for(l, m - 1) fn(i)
       temp.unsafe-assign((i - l).ssize_t, res.unsafe-idx(i.ssize_t))
 
-    p := l
-    l1 := l
-    l2 := m
-    while { l1 < m && l2 < r }
-      val v1 = temp.unsafe-idx((l1 - l).ssize_t)
-      val v2 = res.unsafe-idx(l2.ssize_t)
-      if mask<local>{ v2 < v1 } then
-        res.unsafe-assign(p.ssize_t, res.unsafe-idx(l2.ssize_t))
-        l2 := l2 + 1
-      else
+    // Note: we use a tail-recursive function instead of `while` function because
+    // `while` gives rise to `div` effect, which might possibly lead to overhead.
+    fun loop2(p : int, l1 : int, l2 : int)
+      if l1 < m && l2 < r then
+        val v1 = temp.unsafe-idx((l1 - l).ssize_t)
+        val v2 = res.unsafe-idx(l2.ssize_t)
+        if mask<local>{ v2 < v1 } then
+          res.unsafe-assign(p.ssize_t, res.unsafe-idx(l2.ssize_t))
+          loop2((p + 1).pretend-decreasing, l1, l2 + 1)
+        else
+          res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
+          loop2((p + 1).pretend-decreasing, l1 + 1, l2)
+      else if l1 < m then
         res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
-        l1 := l1 + 1
-      p := p + 1
+        loop2((p + 1).pretend-decreasing, l1 + 1, l2)
 
-    while { l1 < m }
-      res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
-      l1 := l1 + 1
-      p := p + 1
+    loop2(l, l, m)
 
   loop(0, v.length)
   res
