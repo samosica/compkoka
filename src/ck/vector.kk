@@ -23,45 +23,72 @@ inline extern unsafe-idx(^v: vector<a>, index: ssize_t): total a
 inline extern unsafe-assign(v: vector<a>, index: ssize_t, value: a): total ()
   c "kk_vector_unsafe_assign"
 
+inline extern (+)(a: ssize_t, b: ssize_t): total ssize_t
+  c inline "(#1 + #2)"
+
+inline extern (-)(a: ssize_t, b: ssize_t): total ssize_t
+  c inline "(#1 - #2)"
+
+inline extern (/)(a: ssize_t, b: ssize_t): total ssize_t
+  c inline "(#1 / #2)"
+
+inline extern (<)(a: ssize_t, b: ssize_t): total bool
+  c inline "(#1 < #2)"
+
+inline extern (<=)(a: ssize_t, b: ssize_t): total bool
+  c inline "(#1 <= #2)"
+
+val zero = 0.ssize_t
+val one = 1.ssize_t
+val two = 2.ssize_t
+
+fun ssize_t/for(l: ssize_t, r: ssize_t, f: (ssize_t) -> e ()): e ()
+  if l <= r then
+    f(l)
+    for((l + one).pretend-decreasing, r, f)
+
 /// Implementation notes of sort:
 /// - The implementation is merge sort.
 /// - It is 2 times faster than when we do not use unsafe-* functions.
+/// - It is 1.64 times faster than when we convert `int` to `ssize_t` every time.
+
+/// References:
+/// - the implementation of std/core/vector
 
 // Stable sort
 pub fun sort(v: vector<a>, ?(<): (a, a) -> e bool): e vector<a>
   val res = v
   val temp = unsafe-vector((v.length / 2).ssize_t)
 
-  fun loop(l: int, r: int)
-    if r - l <= 1 then
+  fun loop(l: ssize_t, r: ssize_t)
+    if r - l <= one then
       return ()
 
-    val m = (l + r) / 2
+    val m = (l + r) / two
     loop(l.pretend-decreasing, m)
     loop(m.pretend-decreasing, r)
 
-    for(l, m - 1) fn(i)
-      temp.unsafe-assign((i - l).ssize_t, res.unsafe-idx(i.ssize_t))
+    for(l, m - one) fn(i)
+      temp.unsafe-assign(i - l, res.unsafe-idx(i))
 
     // Note: we use a tail-recursive function instead of `while` function because
     // `while` gives rise to `div` effect, which might possibly lead to overhead.
-    fun loop2(p : int, l1 : int, l2 : int)
+    fun loop2(p : ssize_t, l1 : ssize_t, l2 : ssize_t)
       if l1 < m && l2 < r then
-        val v1 = temp.unsafe-idx((l1 - l).ssize_t)
-        val v2 = res.unsafe-idx(l2.ssize_t)
+        val v1 = temp.unsafe-idx(l1 - l)
+        val v2 = res.unsafe-idx(l2)
         if mask<local>{ v2 < v1 } then
-          res.unsafe-assign(p.ssize_t, res.unsafe-idx(l2.ssize_t))
-          loop2((p + 1).pretend-decreasing, l1, l2 + 1)
+          res.unsafe-assign(p, res.unsafe-idx(l2))
+          loop2((p + one).pretend-decreasing, l1, l2 + one)
         else
-          res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
-          loop2((p + 1).pretend-decreasing, l1 + 1, l2)
+          res.unsafe-assign(p, temp.unsafe-idx(l1 - l))
+          loop2((p + one).pretend-decreasing, l1 + one, l2)
       else if l1 < m then
-        res.unsafe-assign(p.ssize_t, temp.unsafe-idx((l1 - l).ssize_t))
-        loop2((p + 1).pretend-decreasing, l1 + 1, l2)
-
+        res.unsafe-assign(p, temp.unsafe-idx(l1 - l))
+        loop2((p + one).pretend-decreasing, l1 + one, l2)
     loop2(l, l, m)
 
-  loop(0, v.length)
+  loop(zero, v.length.ssize_t)
   res
 
 // Remove duplicates.
