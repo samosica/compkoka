@@ -51,6 +51,7 @@ fun ssize_t/for(l: ssize_t, r: ssize_t, f: (ssize_t) -> e ()): e ()
 /// - The implementation is merge sort.
 /// - It is 2 times faster than when we do not use unsafe-* functions.
 /// - It is 1.64 times faster than when we convert `int` to `ssize_t` every time.
+/// - It is fast enough for frequent calls with small vectors.
 
 /// References:
 /// - the implementation of std/core/vector
