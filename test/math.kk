@@ -116,3 +116,17 @@ pub fun main()
     val b = 997
     val d = 301
     expect(floor-sum(n, a, b, d), naive-floor-sum(n, a, b, d))
+  test("extgcd(6, 28)")
+    val a = 6
+    val b = 28
+    val (s, t, g) = extgcd(a, b)
+    expect(g, 2)
+    expect(a * s + b * t, g)
+    expect(s.abs <= b / g, True)
+    expect(t.abs <= a / g, True)
+  test("mod-comb(13, 5, 10007)")
+    expect(mod-comb(13, 5, 10007), 1287)
+  test("factorial(10, 10_000_000)")
+    expect(factorial(10, 10_000_000).list, [1, 1, 2, 6, 24, 120, 720, 5_040, 40_320, 362_880, 3_628_800])
+  test("inv-factorial(5, 10007)")
+    expect(inv-factorial(factorial(5, 10007), 10007).list, [1, 1, 5004, 1668, 417, 8089])
