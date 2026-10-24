@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90
+FROM ubuntu:resolute@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944
 ARG KOKA_VERSION
 ENV KOKA_VERSION=${KOKA_VERSION:-latest}
 # Without this line, we fail to run programs containing characters out of ASCII
